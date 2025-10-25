@@ -1,0 +1,16 @@
+repos:
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v5.0.0
+  hooks:
+  - id: check-yaml
+    exclude: ^esphome/.*\.yaml$
+  - id: check-json
+    exclude: ^esphome/firmware/.*\.json$
+  - id: end-of-file-fixer
+  - id: trailing-whitespace
+  - id: check-docstring-first
+  - id: mixed-line-ending
+  - id: requirements-txt-fixer
+  - id: pretty-format-json
+    args: [--autofix]
+    exclude: ^esphome/firmware/.*\.json$

@@ -1,0 +1,14 @@
+policy:
+  - section:
+      - id: [issue_scope]
+        label:
+          - name: 'software'
+            keys: ['Software']
+          - name: 'esphome'
+            keys: ['ESPHome firmware / installation']
+          - name: 'hardware'
+            keys: ['Hardware']
+          - name: 'documentation'
+            keys: ['Documentation']
+          - name: 'invalid'
+            keys: ['None']
