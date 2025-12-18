@@ -1,0 +1,31 @@
+##############################################
+# HUEnergyDisplay ESPHOME created by denes44 #
+# https://github.com/denes44/HUEnergyDisplay #
+# Factory configuration                      #
+##############################################
+
+substitutions:
+  name: energy-display
+  friendly_name: Energy Display
+
+packages:
+  core: !include huenergydisplay-core.yaml
+  update: !include huenergydisplay-update_ota.yaml
+
+# This should point to the public location of the yaml file that will be adopted.
+# In this case it is the core yaml file that does not contain the extra things
+# that are provided by this factory yaml file as the user does not need these once adopted.
+dashboard_import:
+  package_import_url: github://denes44/HUEnergyDisplay/esphome/huenergydisplay.yaml@main
+
+# API is a requirement of the dashboard import.
+api:
+  reboot_timeout: 0s
+
+# Sets up Bluetooth LE to allow the user
+# to provision wifi credentials to the device.
+esp32_improv:
+  authorizer: none
+
+# Sets up the improv via serial client for Wi-Fi provisioning.
+improv_serial:
