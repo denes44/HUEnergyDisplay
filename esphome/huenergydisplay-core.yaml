@@ -1,0 +1,822 @@
+##############################################
+# HUEnergyDisplay ESPHOME created by denes44 #
+# https://github.com/denes44/HUEnergyDisplay #
+# Core functionately                         #
+##############################################
+
+# ESPHome & Board
+
+esphome:
+  name: ${name}
+  friendly_name: ${friendly_name}
+  min_version: 2025.11.0
+  project:
+    name: "denes44.HUEnergyDisplay"
+    version: 1.0.0
+  platformio_options:
+    board_build.flash_mode: dio
+  on_boot:
+    - priority: 600
+      then:
+        - delay: 5s
+        - lambda: "id(lcd_disp).show_page(id(logo2));"
+        - delay: 5s
+        - lambda: "id(lcd_disp).show_page(id(main_page));"
+
+esp32:
+  variant: esp32s3
+  flash_size: 4MB
+  framework:
+    type: esp-idf
+    sdkconfig_options:
+      CONFIG_ESP32S3_DEFAULT_CPU_FREQ_240: "y"
+
+psram:
+  mode: quad
+  speed: 80MHz
+
+logger:
+
+factory_reset:
+  resets_required: 5
+  max_delay: 10s
+
+http_request:
+
+external_components:
+  - source:
+      type: git
+      url: https://github.com/denes44/HUEnergyDisplay
+      ref: main
+    components: [ max7219 ]
+
+globals:
+  # Power - System
+  - id: power_system_load
+    type: float
+  - id: power_system_frequency
+    type: float
+
+  # Power - Production
+  - id: power_production_total_gross_fact
+    type: float
+  - id: power_production_total_gross_plan
+    type: float
+  - id: power_production_biomass
+    type: float
+  - id: power_production_coal
+    type: float
+  - id: power_production_coal2
+    type: float
+  - id: power_production_extended
+    type: float
+  - id: power_production_gas
+    type: float
+  - id: power_production_hmke
+    type: float
+  - id: power_production_incinerator
+    type: float
+  - id: power_production_nuclear
+    type: float
+  - id: power_production_oil
+    type: float
+  - id: power_production_other
+    type: float
+  - id: power_production_other_renewable
+    type: float
+  - id: power_production_pv
+    type: float
+  - id: power_production_scte
+    type: float
+  - id: power_production_water
+    type: float
+  - id: power_production_water_reservoir
+    type: float
+  - id: power_production_wind
+    type: float
+
+  # Power - Import
+  - id: power_import_balance
+    type: float
+  - id: power_import_at
+    type: float
+  - id: power_import_hr
+    type: float
+  - id: power_import_ro
+    type: float
+  - id: power_import_rs
+    type: float
+  - id: power_import_si
+    type: float
+  - id: power_import_sk
+    type: float
+  - id: power_import_ua
+    type: float
+
+  # Gas - Consumption
+  - id: gas_consumption_total
+    type: float
+
+  # Gas - Containers
+  - id: gas_containers_ratio
+    type: float
+  - id: gas_containers_removal
+    type: float
+  - id: gas_containers_store
+    type: float
+  - id: gas_containers_sum
+    type: float
+
+  # Gas - Import
+  - id: gas_import_balance
+    type: float
+  - id: gas_import_beregdaroc
+    type: float
+  - id: gas_import_csanadpalota
+    type: float
+  - id: gas_import_dravaszerdahely
+    type: float
+  - id: gas_import_kiskundorozsma
+    type: float
+  - id: gas_import_kiskundorozsma2
+    type: float
+  - id: gas_import_mosonmagyarovar
+    type: float
+  - id: gas_import_vecses
+    type: float
+
+  # Gas - Production
+  - id: gas_production_total
+    type: float
+
+  # Status
+  - id: error_http
+    type: bool
+  - id: api_freshness
+    type: bool
+
+# WiFi, AP, Network, etc.
+
+wifi:
+  output_power: 8.5db
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: ${friendly_name} Fallback AP
+
+captive_portal:
+
+
+# Home Assistant API
+
+api:
+
+time:
+  - platform: homeassistant
+    id: api_time
+
+# Built in web server
+
+web_server:
+  port: 80
+  ota: false
+  version: 3
+  sorting_groups:
+    - id: sg_display
+      name: "Display Settings"
+      sorting_weight: 1
+    - id: sg_ambient
+      name: "Ambient Light"
+      sorting_weight: 2
+    - id: sg_api
+      name: "API Settings"
+      sorting_weight: 3
+    - id: sg_status
+      name: "WiFi & API Status"
+      sorting_weight: 4
+    - id: sg_restart
+      name: "Restart & Shutdown"
+      sorting_weight: 5
+    - id: sg_firmware
+      name: "Firmware Upgrade"
+      sorting_weight: 6
+
+
+# Generic sensors and buttons
+
+button:
+  - platform: restart
+    name: Restart
+    id: _restart
+    entity_category: config
+    web_server:
+      sorting_weight: 1
+      sorting_group_id: sg_restart
+  - platform: safe_mode
+    name: Restart (Safe Mode)
+    id: _restart_safe
+    entity_category: config
+    web_server:
+      sorting_weight: 2
+      sorting_group_id: sg_restart
+  - platform: shutdown
+    name: Shutdown
+    id: _shutdown
+    entity_category: config
+    web_server:
+      sorting_weight: 3
+      sorting_group_id: sg_restart
+  - platform: factory_reset
+    name: Factory reset
+    id: _factory
+    entity_category: config
+    web_server:
+      sorting_weight: 4
+      sorting_group_id: sg_restart
+
+sensor:
+  - platform: resistance
+    sensor: adc_sensor
+    configuration: UPSTREAM
+    resistor: 10kOhm
+    name: Ambient Light
+    device_class: illuminance
+    unit_of_measurement: lux
+    filters:
+      - lambda: |-
+          return 7.5948489e5f * pow(x, -1.1694006f);
+    web_server:
+      sorting_weight: 1
+      sorting_group_id: sg_ambient
+  - platform: adc
+    id: adc_sensor
+    pin: GPIO4
+    attenuation: 12db
+    samples: 3
+    sampling_mode: avg
+    update_interval: 10sec
+  - platform: wifi_signal
+    name: Wifi
+    id: wifi_signal_strength
+    update_interval: 60s
+    entity_category: diagnostic
+    web_server:
+      sorting_weight: 1
+      sorting_group_id: sg_status
+    filters:
+    - sliding_window_moving_average:
+        window_size: 15
+        send_every: 15
+
+# displays:
+spi:
+  - id: spi_1
+    clk_pin: GPIO08
+    mosi_pin: GPIO09
+    interface: hardware
+  - id: spi_2
+    clk_pin: GPIO01
+    mosi_pin: GPIO12
+    interface: hardware
+
+display:
+  - platform: mipi_spi
+    model: ST7789V
+    id: lcd_disp
+    spi_id: spi_1
+    dc_pin: GPIO07
+    reset_pin: GPIO10
+    cs_pin: GPIO06
+    dimensions:
+      width: 284
+      height: 76
+      offset_width: 18
+      offset_height: 82
+    rotation: 90
+    buffer_size: 50%
+    invert_colors: False
+    pages:
+      - id: logo1
+        lambda: |-
+          it.image(78, 6, id(logo_image));
+      - id: logo2
+        lambda: |-
+          auto white = Color(255, 255, 255);
+          it.print(142, 38, id(ptsans_38), white, TextAlign::CENTER, "HUEnergyDisplay");
+      - id: main_page
+        lambda: |-
+          auto red = Color(255, 0, 0);
+          auto white = Color(255, 255, 255);
+          auto opt = id(displayed_data).active_index();
+          if (opt.has_value() && opt.value() == 1) {
+            it.printf(2, 2, id(segment), red, "%s", id(gas_unit).current_option());
+          } else {
+            it.printf(2, 2, id(segment), red, "UNITS: MW");
+          }
+          id(display_statusbar).execute();
+      - id: power_nuclear
+        lambda: |-
+          auto red = Color(255, 0, 0);
+          auto white = Color(255, 255, 255);
+          it.print(2, 2, id(icons_big2), red, "\U0000f7b9");
+          it.printf(53, 2, id(segment), red, "%4.0f MW", id(power_production_nuclear));
+          id(display_statusbar).execute();
+      - id: power_gas
+        lambda: |-
+          auto red = Color(255, 0, 0);
+          auto white = Color(255, 255, 255);
+          it.print(2, 2, id(icons_big), red, "\U0000ec19");
+          it.printf(53, 2, id(segment), red, "%4.0f MW", id(power_production_gas));
+          id(display_statusbar).execute();
+      - id: power_biomass
+        lambda: |-
+          auto red = Color(255, 0, 0);
+          auto white = Color(255, 255, 255);
+          it.print(2, 2, id(icons_big), red, "\U0000e761");
+          it.printf(53, 2, id(segment), red, "%4.0f MW", id(power_production_biomass));
+          id(display_statusbar).execute();
+      - id: power_coal
+        lambda: |-
+          auto red = Color(255, 0, 0);
+          auto white = Color(255, 255, 255);
+          it.print(2, 2, id(icons_big), red, "\U0000e47b");
+          it.printf(53, 2, id(segment), red, "%4.0f MW", id(power_production_coal)+id(power_production_coal2));
+          id(display_statusbar).execute();
+      - id: power_incinerator
+        lambda: |-
+          auto red = Color(255, 0, 0);
+          auto white = Color(255, 255, 255);
+          it.print(2, 2, id(icons_big), red, "\U0000e872");
+          it.printf(53, 2, id(segment), red, "%4.0f MW", id(power_production_incinerator));
+          id(display_statusbar).execute();
+      - id: power_oil
+        lambda: |-
+          auto red = Color(255, 0, 0);
+          auto white = Color(255, 255, 255);
+          it.print(2, 2, id(icons_big), red, "\U0000ec15");
+          it.printf(53, 2, id(segment), red, "%4.0f MW", id(power_production_oil));
+          id(display_statusbar).execute();
+      - id: power_wind
+        lambda: |-
+          auto red = Color(255, 0, 0);
+          auto white = Color(255, 255, 255);
+          it.print(2, 2, id(icons_big), red, "\U0000f084");
+          it.printf(53, 2, id(segment), red, "%4.0f MW", id(power_production_water)+id(power_production_water_reservoir));
+          id(display_statusbar).execute();
+      - id: power_water
+        lambda: |-
+          auto red = Color(255, 0, 0);
+          auto white = Color(255, 255, 255);
+          it.print(2, 2, id(icons_big), red, "\U0000ec0c");
+          it.printf(53, 2, id(segment), red, "%4.0f MW", id(power_production_wind));
+          id(display_statusbar).execute();
+      - id: power_other
+        lambda: |-
+          auto red = Color(255, 0, 0);
+          auto white = Color(255, 255, 255);
+          it.print(2, 2, id(icons_big), red, "\U0000e47b");
+          it.printf(53, 2, id(segment), red, "%4.0f MW", id(power_production_other)+id(power_production_other_renewable));
+          id(display_statusbar).execute();
+  - platform: max7219
+    id: segment_disp
+    spi_id: spi_2
+    cs_pin: GPIO13
+    num_chips: 11
+    reverse_enable: true
+    lambda: |-
+      auto opt = id(displayed_data).active_index();
+
+      // special characters for the bar displays
+      static const char* letters[17] = {
+        // -8 .. 1
+        " \x88", " \x87", " \x86", " \x85", " \x84", " \x83", " \x82", " \x81",
+        //  0
+        "  ",
+        // 1 .. 8
+        "\x91 ", "\x92 ", "\x93 ", "\x94 ", "\x95 ", "\x96 ", "\x97 ", "\x98 "
+      };
+
+      // LED TEST
+      if (id(led_test).state) {
+        it.print(0,"   8.8.8.8.8.");     // import_ua
+        it.print(8,"   8.8.8.8.8.");     // import_sk
+        it.print(16,"   8.8.8.8.8.");    // import_at
+        it.print(24,"   8.8.8.8.8.");    // load
+        it.print(32,"   8.8.8.8.8.");    // frequency
+        it.print(40,"   8.8.8.8.8.");    // import_ro
+        it.print(48,"8.8.8.8.");         // solar
+        it.print(52,"8.8.8.8.");         // production
+        it.print(56,"8.8.8.8.8.8.8.8."); // import balance
+        it.print(64,"   8.8.8.8.8.");    // import_si
+        it.print(72,"   8.8.8.8.8.");    // import_hr
+        it.print(80,"   8.8.8.8.8.");    // import_rs
+      // Display turned off
+      } else if(!id(segments_light).remote_values.is_on()) {
+        it.print(0,"                                                ");
+        it.print(48,"                                        ");
+      // POWER DATA
+      } else if (opt.has_value() && opt.value() == 0) {
+        it.printf(0,"   %5.0f",id(power_import_ua));         // import_ua
+        it.printf(8,"   %5.0f",id(power_import_sk));         // import_sk
+        it.printf(16,"   %5.0f",id(power_import_at));        // import_at
+        it.printf(24,"   %5.0f",id(power_system_load));      // load
+        it.printf(32,"   %2.3f",id(power_system_frequency)); // frequency
+        it.printf(40,"   %5.0f",id(power_import_ro));        // import_ro
+        it.printf(48,"%4.0f",id(power_production_hmke)+id(power_production_scte)+id(power_production_pv)); // solar
+        it.printf(52,"%4.0f",id(power_production_total_gross_fact)); // production
+        it.printf(58," %5.0f",id(power_import_balance));     // import balance
+        it.printf(64,"   %5.0f",id(power_import_si));        // import_si
+        it.printf(72,"   %5.0f",id(power_import_hr));        // import_hr
+        it.printf(80,"   %5.0f",id(power_import_rs));        // import_rs
+        // import balance bar
+        int import_bar = 0;
+        int load2 = id(power_production_total_gross_fact);
+        if (load2 > 0) {
+          import_bar = (int) roundf((id(power_import_balance) / load2) * 8.0f);
+        }
+        if (import_bar > 8) { import_bar = 8; } else if (import_bar < -8) { import_bar = -8; }
+        it.printf(56,"%s",letters[import_bar+8]);
+
+      // GAS DATA
+      } else if (opt.has_value() && opt.value() == 1) {
+        it.printf(0,"   %5.0f",id(gas_import_beregdaroc)/1000);       // import_ua
+        it.printf(8,"   %5.0f",id(gas_import_vecses)/1000);           // import_sk
+        it.printf(16,"   %5.0f",id(gas_import_mosonmagyarovar)/1000); // import_at
+        it.printf(24,"   %5.0f",id(gas_consumption_total)/1000);      // consumption
+        it.printf(32,"    %2.2f",id(gas_containers_ratio));           // containers ratio
+        it.printf(40,"   %5.0f",id(gas_import_csanadpalota)/1000);    // import_ro
+        it.printf(48,"%4.0f",id(gas_containers_removal)/1000);        // containers removal
+        it.printf(52,"%4.0f",id(gas_production_total)/1000);          // production
+        it.printf(58," %5.0f",id(gas_import_balance)/1000);           // import balance
+        it.printf(64,"   %5.0f",id(gas_import_kiskundorozsma)/1000);  // import_si
+        it.printf(72,"   %5.0f",id(gas_import_dravaszerdahely)/1000); // import_hr
+        it.printf(80,"   %5.0f",id(gas_import_kiskundorozsma2)/1000); // import_rs
+        // import balance bar
+        int import_bar = 0;
+        int load2 = id(gas_consumption_total);
+        if (load2 > 0) {
+          import_bar = (int) roundf((id(gas_import_balance) / load2) * 8.0f);
+        }
+        if (import_bar > 8) { import_bar = 8; } else if (import_bar < -8) { import_bar = -8; }
+        it.printf(56,"%s",letters[import_bar+8]);
+      }
+
+light:
+  - platform: monochromatic
+    name: 7-segment displays
+    id: segments_light
+    output: segments_light_output
+    restore_mode: RESTORE_DEFAULT_OFF
+    web_server:
+      sorting_weight: 1
+      sorting_group_id: sg_display
+    on_turn_on:
+      - script.execute: api_update
+  - platform: monochromatic
+    name: LCD display
+    id: lcd_light
+    output: lcd_light_output
+    restore_mode: RESTORE_DEFAULT_OFF
+    web_server:
+      sorting_weight: 2
+      sorting_group_id: sg_display
+
+output:
+  - platform: template
+    id: segments_light_output
+    type: float
+    write_action:
+      lambda: |-
+        id(segment_disp).set_intensity((int)(state*15));
+  - platform: ledc
+    id: lcd_light_output
+    pin: GPIO05
+    inverted: true
+
+script:
+  - id: api_update
+    then:
+      - if:
+          condition:
+            lambda: return !id(api_key).state.empty();
+          then:
+            - http_request.get:
+                url: !lambda |-
+                  return ((std::string) "https://api.440442.xyz/energy/" + id(displayed_data).current_option()).c_str();
+                request_headers:
+                  API-Key: !lambda |-
+                    static std::string key;
+                    key = id(api_key).state;
+                    return key.c_str();
+                  User-Agent: !lambda |-
+                    static std::string ua = std::string("esphome-") + ESPHOME_PROJECT_VERSION;
+                    return ua.c_str();
+                capture_response: true
+                on_response:
+                  then:
+                    - if:
+                        condition:
+                          lambda: return response->status_code == 200;
+                        then:
+                          - lambda: |-
+                              id(error_http) = false;
+                              json::parse_json(body, [](JsonObject root) -> bool {
+                                id(api_freshness) = root["is_fresh"];
+                                auto opt = id(displayed_data).active_index();
+                                // POWER DATA
+                                if (opt.has_value() && opt.value() == 0) {
+                                  // system
+                                  id(power_system_load) = root["system"]["load"] | 0.0;
+                                  id(power_system_frequency) = root["system"]["frequency"] | 0.0;
+
+                                  // production
+                                  id(power_production_biomass) = root["production"]["biomass"] | 0.0;
+                                  id(power_production_coal) = root["production"]["coal"] | 0.0;
+                                  id(power_production_coal2) = root["production"]["coal2"] | 0.0;
+                                  id(power_production_extended) = root["production"]["extended"] | 0.0;
+                                  id(power_production_gas) = root["production"]["gas"] | 0.0;
+                                  id(power_production_hmke) = root["production"]["hmke_pv"] | 0.0;
+                                  id(power_production_incinerator) = root["production"]["incinerator"] | 0.0;
+                                  id(power_production_nuclear) = root["production"]["nuclear"] | 0.0;
+                                  id(power_production_oil) = root["production"]["oil"] | 0.0;
+                                  id(power_production_other) = root["production"]["other"] | 0.0;
+                                  id(power_production_other_renewable) = root["production"]["other_renewable"] | 0.0;
+                                  id(power_production_pv) = root["production"]["pv"] | 0.0;
+                                  id(power_production_scte) = root["production"]["scte_pv"] | 0.0;
+                                  id(power_production_water) = root["production"]["water"] | 0.0;
+                                  id(power_production_water_reservoir) = root["production"]["water_reservoir"] | 0.0;
+                                  id(power_production_wind) = root["production"]["wind"] | 0.0;
+
+                                  // production.total
+                                  id(power_production_total_gross_fact) = root["production"]["total"]["gross_fact"] | 0.0;
+                                  id(power_production_total_gross_plan) = root["production"]["total"]["gross_plan"] | 0.0;
+
+                                  // import
+                                  id(power_import_balance) = root["import"]["balance"] | 0.0;
+                                  id(power_import_at) = root["import"]["at"] | 0.0;
+                                  id(power_import_hr) = root["import"]["hr"] | 0.0;
+                                  id(power_import_ro) = root["import"]["ro"] | 0.0;
+                                  id(power_import_rs) = root["import"]["rs"] | 0.0;
+                                  id(power_import_si) = root["import"]["si"] | 0.0;
+                                  id(power_import_sk) = root["import"]["sk"] | 0.0;
+                                  id(power_import_ua) = root["import"]["ua"] | 0.0;
+
+                                // GAS DATA
+                                } else if(opt.has_value() && opt.value() == 1) {
+                                  // Determine JSON key from selected gas unit
+                                  auto opt2 = id(gas_unit).active_index();
+                                  const char *json_key;
+                                  if (opt2.has_value()) {
+                                    switch (opt2.value()) {
+                                        case 0: json_key = "kwh"; break;
+                                        case 1: json_key = "m3_0"; break;
+                                        case 2: json_key = "m3_15"; break;
+                                        default: json_key = "kwh"; break;
+                                    }
+                                  } else {
+                                    json_key = "kwh";
+                                  }
+
+                                  // consumption
+                                  id(gas_consumption_total) =
+                                      root["consumption"]["total"][json_key] | 0.0;
+
+                                  // containers
+                                  id(gas_containers_ratio) =
+                                      root["containers"]["ratio"][json_key] | 0.0;
+                                  id(gas_containers_removal) =
+                                      root["containers"]["removal"][json_key] | 0.0;
+                                  id(gas_containers_store) =
+                                      root["containers"]["store"][json_key] | 0.0;
+                                  id(gas_containers_sum) =
+                                      root["containers"]["sum"][json_key] | 0.0;
+
+                                  // import
+                                  id(gas_import_balance) =
+                                      root["import"]["balance"][json_key] | 0.0;
+                                  id(gas_import_beregdaroc) =
+                                      root["import"]["beregdaroc"][json_key] | 0.0;
+                                  id(gas_import_csanadpalota) =
+                                      root["import"]["csanadpalota"][json_key] | 0.0;
+                                  id(gas_import_dravaszerdahely) =
+                                      root["import"]["dravaszerdahely"][json_key] | 0.0;
+                                  id(gas_import_kiskundorozsma) =
+                                      root["import"]["kiskundorozsma"][json_key] | 0.0;
+                                  id(gas_import_kiskundorozsma2) =
+                                      root["import"]["kiskundorozsma2"][json_key] | 0.0;
+                                  id(gas_import_mosonmagyarovar) =
+                                      root["import"]["mosonmagyarovar"][json_key] | 0.0;
+                                  id(gas_import_vecses) =
+                                      root["import"]["vecses"][json_key] | 0.0;
+
+                                  // production
+                                  id(gas_production_total) =
+                                      root["production"]["total"][json_key] | 0.0;
+                                }
+
+                                return true;
+                              });
+                        else:
+                          - lambda: "id(error_http) = true;"
+                          - logger.log:
+                              format: "Error: Response status: %d, message %s"
+                              args: [ 'response->status_code', 'body.c_str()' ]
+  - id: display_statusbar
+    then:
+      - lambda: |-
+          auto white = Color(255, 255, 255);
+          auto red = Color(255, 0, 0);
+          auto orange = Color(255, 255, 0);
+
+          auto state = App.get_app_state();
+
+          if (id(wifi_component).is_connected()) {
+            id(lcd_disp).print(2, 55, id(icons), white, "\U0000e63e");
+          } else {
+            id(lcd_disp).print(2, 55, id(icons), white, "\U0000e648");
+          }
+
+          if (global_api_server->is_connected()) {
+            id(lcd_disp).print(20, 55, id(icons), white, "\U0000f1b7");
+          }
+
+          if (id(error_http)) {
+            id(lcd_disp).print(38, 55, id(icons), red, "\U0000e002");
+          } else if (!id(api_freshness)) {
+            id(lcd_disp).print(38, 55, id(icons), orange, "\U0000e002");
+          }
+
+          if (state & STATUS_LED_ERROR) {
+            id(lcd_disp).print(56, 57, id(icons), red, "\U0000e000");
+          }
+
+          id(lcd_disp).strftime(230, 53, id(segment_20), white, "%H:%M", id(api_time).now());
+
+interval:
+  - interval: 30s
+    id: api_update_interval
+    startup_delay: 5s
+    then:
+      - if:
+          condition:
+            light.is_on: segments_light
+          then:
+            - script.execute: api_update
+  - interval: 5s
+    id: display_change_interval
+    startup_delay: 10s
+    then:
+      - if:
+          condition:
+            - lambda: 'return strcmp(id(displayed_data).current_option(), "power") == 0;'
+          then:
+            - if:
+                condition:
+                  - display.is_displaying_page: power_other
+                then:
+                  - display.page.show: power_nuclear
+                else:
+                  - display.page.show_next: lcd_disp
+
+select:
+  - platform: template
+    name: "Displayed data"
+    id: displayed_data
+    optimistic: true
+    options:
+      - power
+      - gas
+    initial_option: power
+    restore_value: true
+    on_value:
+      then:
+        - lambda: |-
+            if (i == 0) {
+              id(api_update_interval).set_update_interval(30*1000);
+            } else {
+              id(api_update_interval).set_update_interval(15*60*1000);
+            }
+        - script.execute: api_update
+    web_server:
+      sorting_weight: 3
+      sorting_group_id: sg_display
+  - platform: template
+    name: "Gas unit of measure"
+    id: gas_unit
+    optimistic: true
+    options:
+      - "MWh/h"
+      - "m3/h 0°"
+      - "m3/h 15°"
+    initial_option: "MWh/h"
+    restore_value: true
+    on_value:
+      then:
+        - script.execute: api_update
+    web_server:
+      sorting_weight: 3
+      sorting_group_id: sg_display
+
+text:
+  - platform: template
+    name: "API Key"
+    id: api_key
+    optimistic: true
+    restore_value: true
+    min_length: 36
+    max_length: 36
+    mode: password
+    on_value:
+      then:
+        - script.execute: api_update
+    web_server:
+      sorting_weight: 1
+      sorting_group_id: sg_api
+
+switch:
+  - platform: template
+    name: LED Test
+    id: led_test
+    optimistic: true
+    web_server:
+      sorting_weight: 4
+      sorting_group_id: sg_display
+    entity_category: config
+
+binary_sensor:
+  - platform: gpio
+    pin:
+      number: GPIO0
+      mode:
+        input: true
+        pullup: true
+    id: button_boot
+    on_press:
+      - switch.toggle: led_test
+  - platform: status
+    name: API Connection Status
+    id: ha_status
+    web_server:
+      sorting_weight: 3
+      sorting_group_id: sg_status
+    entity_category: diagnostic
+
+font:
+  - file: "resources/alarmclock.ttf"
+    id: segment
+    size: 55
+    bpp: 8
+  - file: "resources/alarmclock.ttf"
+    id: segment_20
+    size: 20
+    bpp: 8
+  - file:
+      type: gfonts
+      family: PT Sans
+      weight: 700
+    id: ptsans_38
+    size: 38
+  - file: "gfonts://Material+Symbols+Outlined"
+    id: icons
+    size: 16
+    bpp: 8
+    glyphs: [
+      "\U0000e63e", # mdi-wifi
+      "\U0000e648", # mdi-wifi-off
+      "\U0000e2ae", # mdi-charger
+      "\U0000f190", # mdi-monitoring
+      "\U0000ec1b", # mdi-electric-meter
+      "\U0000f1b7", # mdi-api
+      "\U0000e002", # mdi-warning
+      "\U0000e000", # mdi-error
+      "\u0020", # space
+    ]
+  - file: "gfonts://Material+Symbols+Outlined"
+    id: icons_big
+    size: 43
+    bpp: 4
+    glyphs: [
+      "\U0000ec0f", # solar
+      "\U0000ec0c", # wind
+      "\U0000ec1c", # electric-bolt
+      "\U0000ebbc", # factory
+      "\U0000ec19", # gas-meter
+      "\U0000f084", # water
+      "\U0000ec15", # oil-barrel
+      "\U0000e224", # valve
+      "\U0000e761", # compost
+      "\U0000e872", # delete-trash
+      "\U0000e47b", # other
+    ]
+  - file: "fonts/Font Awesome 7 Free-Solid-900.otf"
+    id: icons_big2
+    size: 43
+    glyphs: [
+      "\U0000f7b9", # radiation
+      "\U0000f46a", # flame
+      "\U0000f72e", # wind
+    ]
+
+image:
+  - file: https://raw.githubusercontent.com/denes44/HUEnergyDisplay/refs/heads/main/esphome/resources/logo.png
+    type: binary
+    id: logo_image
