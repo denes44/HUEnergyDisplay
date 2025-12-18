@@ -21,7 +21,7 @@ jobs:
         uses: esphome/build-action@v7
         id: esphome-build
         with:
-          yaml-file: esphome/metro-display.factory.yaml
+          yaml-file: esphome/huenergydisplay.factory.yaml
           complete-manifest: true
           cache: true
       - name: Move files for versioning

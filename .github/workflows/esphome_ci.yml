@@ -24,7 +24,7 @@ jobs:
       max-parallel: 3
       matrix:
         file:
-          - metro-display
+          - huenergydisplay
         esphome-version:
           - stable
           - beta
