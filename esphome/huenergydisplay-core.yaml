@@ -663,7 +663,7 @@ script:
           }
 
           if (id(api_time).now().is_valid()) {
-            id(lcd_disp).strftime(230, 53, id(segment_15), white, "%H:%M", id(api_time).now());
+            id(lcd_disp).strftime(230, 53, id(segment_20), white, "%H:%M", id(api_time).now());
           }
 
 interval:
