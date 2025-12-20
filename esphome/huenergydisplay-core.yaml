@@ -150,8 +150,8 @@ globals:
     type: float
 
   # Status
-  - id: error_http
-    type: bool
+  - id: latest_http_status
+    type: int
   - id: api_freshness
     type: bool
 
@@ -179,7 +179,6 @@ time:
 
 web_server:
   port: 80
-  ota: false
   version: 3
   sorting_groups:
     - id: sg_display
@@ -188,18 +187,15 @@ web_server:
     - id: sg_ambient
       name: "Ambient Light"
       sorting_weight: 2
-    - id: sg_api
-      name: "API Settings"
-      sorting_weight: 3
     - id: sg_status
       name: "WiFi & API Status"
-      sorting_weight: 4
+      sorting_weight: 3
     - id: sg_restart
       name: "Restart & Shutdown"
-      sorting_weight: 5
+      sorting_weight: 4
     - id: sg_firmware
       name: "Firmware Upgrade"
-      sorting_weight: 6
+      sorting_weight: 5
 
 
 # Generic sensors and buttons
@@ -466,7 +462,7 @@ light:
     name: 7-segment displays
     id: segments_light
     output: segments_light_output
-    restore_mode: RESTORE_DEFAULT_OFF
+    restore_mode: RESTORE_DEFAULT_ON
     web_server:
       sorting_weight: 1
       sorting_group_id: sg_display
@@ -476,7 +472,7 @@ light:
     name: LCD display
     id: lcd_light
     output: lcd_light_output
-    restore_mode: RESTORE_DEFAULT_OFF
+    restore_mode: RESTORE_DEFAULT_ON
     web_server:
       sorting_weight: 2
       sorting_group_id: sg_display
@@ -498,7 +494,7 @@ script:
     then:
       - if:
           condition:
-            lambda: return !id(api_key).state.empty();
+            wifi.connected:
           then:
             - http_request.get:
                 url: !lambda |-
@@ -506,7 +502,22 @@ script:
                 request_headers:
                   API-Key: !lambda |-
                     static std::string key;
-                    key = id(api_key).state;
+
+                    if (key.empty()) {
+                      esphome::md5::MD5Digest digest;
+                      digest.init();
+
+                      const std::string &input = id(mac_addr).state;
+                      digest.add(input.c_str(), input.size());
+                      digest.calculate();
+
+                      char buf[33];
+                      digest.get_hex(buf);
+                      buf[32] = 0;
+
+                      key = buf;
+                    }
+
                     return key.c_str();
                   User-Agent: !lambda |-
                     static std::string ua = std::string("esphome-") + ESPHOME_PROJECT_VERSION;
@@ -514,12 +525,12 @@ script:
                 capture_response: true
                 on_response:
                   then:
+                    - lambda: "id(latest_http_status) = response->status_code;"
                     - if:
                         condition:
                           lambda: return response->status_code == 200;
                         then:
                           - lambda: |-
-                              id(error_http) = false;
                               json::parse_json(body, [](JsonObject root) -> bool {
                                 id(api_freshness) = root["is_fresh"];
                                 auto opt = id(displayed_data).active_index();
@@ -617,7 +628,6 @@ script:
                                 return true;
                               });
                         else:
-                          - lambda: "id(error_http) = true;"
                           - logger.log:
                               format: "Error: Response status: %d, message %s"
                               args: [ 'response->status_code', 'body.c_str()' ]
@@ -640,17 +650,21 @@ script:
             id(lcd_disp).print(20, 55, id(icons), white, "\U0000f1b7");
           }
 
-          if (id(error_http)) {
-            id(lcd_disp).print(38, 55, id(icons), red, "\U0000e002");
+          if (id(latest_http_status) == 401) {
+            id(lcd_disp).print(56, 55, id(icons), red, "\U0000e73c");
+          } else if (id(latest_http_status) != 200) {
+            id(lcd_disp).print(56, 55, id(icons), red, "\U0000e002");
           } else if (!id(api_freshness)) {
-            id(lcd_disp).print(38, 55, id(icons), orange, "\U0000e002");
+            id(lcd_disp).print(56, 55, id(icons), orange, "\U0000e002");
           }
 
           if (state & STATUS_LED_ERROR) {
-            id(lcd_disp).print(56, 57, id(icons), red, "\U0000e000");
+            id(lcd_disp).print(74, 57, id(icons), red, "\U0000e000");
           }
 
-          id(lcd_disp).strftime(230, 53, id(segment_20), white, "%H:%M", id(api_time).now());
+          if (id(api_time).now().is_valid()) {
+            id(lcd_disp).strftime(230, 53, id(segment_15), white, "%H:%M", id(api_time).now());
+          }
 
 interval:
   - interval: 30s
@@ -677,6 +691,16 @@ interval:
                   - display.page.show: power_nuclear
                 else:
                   - display.page.show_next: lcd_disp
+      - if:
+          condition:
+            - lambda: 'return strcmp(id(displayed_data).current_option(), "gas") == 0;'
+          then:
+            - if:
+                condition:
+                  - not:
+                      - display.is_displaying_page: main_page
+                then:
+                  - display.page.show: main_page
 
 select:
   - platform: template
@@ -717,21 +741,11 @@ select:
       sorting_weight: 3
       sorting_group_id: sg_display
 
-text:
-  - platform: template
-    name: "API Key"
-    id: api_key
-    optimistic: true
-    restore_value: true
-    min_length: 36
-    max_length: 36
-    mode: password
-    on_value:
-      then:
-        - script.execute: api_update
-    web_server:
-      sorting_weight: 1
-      sorting_group_id: sg_api
+text_sensor:
+  - platform: wifi_info
+    mac_address:
+      id: mac_addr
+      internal: true
 
 switch:
   - platform: template
@@ -789,6 +803,7 @@ font:
       "\U0000f1b7", # mdi-api
       "\U0000e002", # mdi-warning
       "\U0000e000", # mdi-error
+      "\U0000e73c", # mdi-key
       "\u0020", # space
     ]
   - file: "gfonts://Material+Symbols+Outlined"
