@@ -4,30 +4,23 @@
 ![With ESPHome as a firmare](https://img.shields.io/badge/firmware-esphome-blue?logo=esphome)
 ![Home Assistant Compatible](https://img.shields.io/badge/homassistant-compatible-blue?logo=homeassistant)
 
+<img align="left" src="hardware/pcb.jpg" width="400" alt="Design of the PCB">
+
 Custom 7 segment display for displaying the hungarian power or natural gas
 transmission system.
 
 The display has multiple 7 segment displays for different data arranged around
-the map of the country:
+the map of the country, and it also has a 2.25" TFT display for displaying
+status and other miscellaneous data.
 
-<img align="left" src="hardware/pcb.jpg" width="400" alt="Design of the PCB">
-
-* **Power:**
-  * System load
-  * Frequency
-  * Power plant production
-  * Solar production
-  * Import/export to neighbouring contries, and total balance
-  * Detailed power plant production on the TFT display
-* **Gas:**
-  * Total consumption (system load)
-  * Storage container ratio
-  * Production
-  * Storage extraction
-  * Import/export to neighbouring contries, and total balance
-
-It also has a 2.25" TFT display for displaying status and other miscellaneous
-data.
+| **Power** | **Gas** |
+| --------- | ------- |
+| System load | Total consumption |
+| Frequency | Storage container ratio |
+| Power plant production | Production |
+| Solar production | Storage extraction |
+| Import/export to neighbouring contries, and total balance | Import/export to neighbouring contries, and total balance |
+| Detailed power plant production on the TFT display | |
 
 If you are looking for the easiest way to **start using your display
 under Home Assistant:** ***[Home Assistant Quick Start Guide](HomeAssistant.md)***
