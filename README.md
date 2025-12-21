@@ -10,7 +10,7 @@ transmission system.
 The display has multiple 7 segment displays for different data arranged around
 the map of the country:
 
-<img align="left" src="hardware/pcb.png" width="400" alt="Design of the PCB">
+<img align="left" src="hardware/pcb.jpg" width="400" alt="Design of the PCB">
 
 * **Power:**
   * System load

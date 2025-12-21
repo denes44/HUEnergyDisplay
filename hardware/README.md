@@ -4,7 +4,7 @@
 
 ## PCB Size
 
-<img align="right" width="300" src="pcb.png" alt="Design of the PCB">
+<img align="right" width="300" src="pcb.jpg" alt="Design of the PCB">
 
 The size of the PCB is 300 mm x 210 mm.
 
@@ -22,7 +22,7 @@ picture frame, so you can mount the PCB: [pcb_cutout.pdf](pcb_cutout.pdf)
 
 ## Controller
 
-<img align="left" src="esp32-s3.png" alt="Photo of the ESP32 controller">
+<img align="left" src="esp32-s3.jpg" alt="Photo of the ESP32 controller">
 The PCB is designed to accomodate an ESP32-S3 SuperMini controller.
 
 The firmware is ESPHome, you can find the configuration to it in the
