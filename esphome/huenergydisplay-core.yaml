@@ -303,7 +303,6 @@ display:
       - id: main_page
         lambda: |-
           auto red = Color(255, 0, 0);
-          auto white = Color(255, 255, 255);
           auto opt = id(displayed_data).active_index();
           if (opt.has_value() && opt.value() == 1) {
             it.printf(2, 2, id(segment), red, "%s", id(gas_unit).current_option());
@@ -335,42 +334,36 @@ display:
       - id: power_coal
         lambda: |-
           auto red = Color(255, 0, 0);
-          auto white = Color(255, 255, 255);
           it.print(2, 2, id(icons_big), red, "\U0000e47b");
           it.printf(53, 2, id(segment), red, "%4.0f MW", id(power_production_coal_brown)+id(power_production_coal_hard));
           id(display_statusbar).execute();
       - id: power_incinerator
         lambda: |-
           auto red = Color(255, 0, 0);
-          auto white = Color(255, 255, 255);
           it.print(2, 2, id(icons_big), red, "\U0000e872");
           it.printf(53, 2, id(segment), red, "%4.0f MW", id(power_production_waste));
           id(display_statusbar).execute();
       - id: power_oil
         lambda: |-
           auto red = Color(255, 0, 0);
-          auto white = Color(255, 255, 255);
           it.print(2, 2, id(icons_big), red, "\U0000ec15");
           it.printf(53, 2, id(segment), red, "%4.0f MW", id(power_production_oil));
           id(display_statusbar).execute();
       - id: power_wind
         lambda: |-
           auto red = Color(255, 0, 0);
-          auto white = Color(255, 255, 255);
           it.print(2, 2, id(icons_big), red, "\U0000f084");
           it.printf(53, 2, id(segment), red, "%4.0f MW", id(power_production_hydro_ror)+id(power_production_hydro_reservoir));
           id(display_statusbar).execute();
       - id: power_water
         lambda: |-
           auto red = Color(255, 0, 0);
-          auto white = Color(255, 255, 255);
           it.print(2, 2, id(icons_big), red, "\U0000ec0c");
           it.printf(53, 2, id(segment), red, "%4.0f MW", id(power_production_wind));
           id(display_statusbar).execute();
       - id: power_other
         lambda: |-
           auto red = Color(255, 0, 0);
-          auto white = Color(255, 255, 255);
           it.print(2, 2, id(icons_big), red, "\U0000e47b");
           it.printf(53, 2, id(segment), red, "%4.0f MW", id(power_production_other)+id(power_production_other_renewable));
           id(display_statusbar).execute();
