@@ -12,7 +12,7 @@ esphome:
   min_version: 2025.11.0
   project:
     name: "denes44.HUEnergyDisplay"
-    version: 1.0.1
+    version: 1.1.0
   platformio_options:
     board_build.flash_mode: dio
   on_boot:
@@ -26,10 +26,9 @@ esphome:
 esp32:
   variant: esp32s3
   flash_size: 4MB
+  cpu_frequency: 240MHz
   framework:
     type: esp-idf
-    sdkconfig_options:
-      CONFIG_ESP32S3_DEFAULT_CPU_FREQ_240: "y"
 
 psram:
   mode: quad
@@ -42,6 +41,7 @@ factory_reset:
   max_delay: 10s
 
 http_request:
+  watchdog_timeout: 5000ms
 
 external_components:
   - source:
@@ -64,17 +64,15 @@ globals:
     type: float
   - id: power_production_biomass
     type: float
-  - id: power_production_coal
+  - id: power_production_coal_brown
     type: float
-  - id: power_production_coal2
-    type: float
-  - id: power_production_extended
+  - id: power_production_coal_hard
     type: float
   - id: power_production_gas
     type: float
-  - id: power_production_hmke
+  - id: power_production_hspp
     type: float
-  - id: power_production_incinerator
+  - id: power_production_waste
     type: float
   - id: power_production_nuclear
     type: float
@@ -86,11 +84,11 @@ globals:
     type: float
   - id: power_production_pv
     type: float
-  - id: power_production_scte
+  - id: power_production_scpp
     type: float
-  - id: power_production_water
+  - id: power_production_hydro_ror
     type: float
-  - id: power_production_water_reservoir
+  - id: power_production_hydro_reservoir
     type: float
   - id: power_production_wind
     type: float
@@ -124,25 +122,23 @@ globals:
     type: float
   - id: gas_containers_store
     type: float
-  - id: gas_containers_sum
-    type: float
 
   # Gas - Import
   - id: gas_import_balance
     type: float
-  - id: gas_import_beregdaroc
+  - id: gas_import_at
     type: float
-  - id: gas_import_csanadpalota
+  - id: gas_import_hr
     type: float
-  - id: gas_import_dravaszerdahely
+  - id: gas_import_ro
     type: float
-  - id: gas_import_kiskundorozsma
+  - id: gas_import_rs
     type: float
-  - id: gas_import_kiskundorozsma2
+  - id: gas_import_rs2
     type: float
-  - id: gas_import_mosonmagyarovar
+  - id: gas_import_sk
     type: float
-  - id: gas_import_vecses
+  - id: gas_import_ua
     type: float
 
   # Gas - Production
@@ -174,6 +170,11 @@ api:
 time:
   - platform: homeassistant
     id: api_time
+    on_time:
+      - seconds: 0
+        minutes: "*"
+        then:
+          - component.update: lcd_disp
 
 # Built in web server
 
@@ -302,7 +303,6 @@ display:
       - id: main_page
         lambda: |-
           auto red = Color(255, 0, 0);
-          auto white = Color(255, 255, 255);
           auto opt = id(displayed_data).active_index();
           if (opt.has_value() && opt.value() == 1) {
             it.printf(2, 2, id(segment), red, "%s", id(gas_unit).current_option());
@@ -334,42 +334,36 @@ display:
       - id: power_coal
         lambda: |-
           auto red = Color(255, 0, 0);
-          auto white = Color(255, 255, 255);
           it.print(2, 2, id(icons_big), red, "\U0000e47b");
-          it.printf(53, 2, id(segment), red, "%4.0f MW", id(power_production_coal)+id(power_production_coal2));
+          it.printf(53, 2, id(segment), red, "%4.0f MW", id(power_production_coal_brown)+id(power_production_coal_hard));
           id(display_statusbar).execute();
       - id: power_incinerator
         lambda: |-
           auto red = Color(255, 0, 0);
-          auto white = Color(255, 255, 255);
           it.print(2, 2, id(icons_big), red, "\U0000e872");
-          it.printf(53, 2, id(segment), red, "%4.0f MW", id(power_production_incinerator));
+          it.printf(53, 2, id(segment), red, "%4.0f MW", id(power_production_waste));
           id(display_statusbar).execute();
       - id: power_oil
         lambda: |-
           auto red = Color(255, 0, 0);
-          auto white = Color(255, 255, 255);
           it.print(2, 2, id(icons_big), red, "\U0000ec15");
           it.printf(53, 2, id(segment), red, "%4.0f MW", id(power_production_oil));
           id(display_statusbar).execute();
       - id: power_wind
         lambda: |-
           auto red = Color(255, 0, 0);
-          auto white = Color(255, 255, 255);
           it.print(2, 2, id(icons_big), red, "\U0000f084");
-          it.printf(53, 2, id(segment), red, "%4.0f MW", id(power_production_water)+id(power_production_water_reservoir));
+          it.printf(53, 2, id(segment), red, "%4.0f MW", id(power_production_hydro_ror)+id(power_production_hydro_reservoir));
           id(display_statusbar).execute();
       - id: power_water
         lambda: |-
           auto red = Color(255, 0, 0);
-          auto white = Color(255, 255, 255);
           it.print(2, 2, id(icons_big), red, "\U0000ec0c");
           it.printf(53, 2, id(segment), red, "%4.0f MW", id(power_production_wind));
           id(display_statusbar).execute();
       - id: power_other
         lambda: |-
           auto red = Color(255, 0, 0);
-          auto white = Color(255, 255, 255);
           it.print(2, 2, id(icons_big), red, "\U0000e47b");
           it.printf(53, 2, id(segment), red, "%4.0f MW", id(power_production_other)+id(power_production_other_renewable));
           id(display_statusbar).execute();
@@ -412,18 +406,44 @@ display:
         it.print(48,"                                        ");
       // POWER DATA
       } else if (opt.has_value() && opt.value() == 0) {
-        it.printf(0,"   %5.0f",id(power_import_ua));         // import_ua
-        it.printf(8,"   %5.0f",id(power_import_sk));         // import_sk
-        it.printf(16,"   %5.0f",id(power_import_at));        // import_at
-        it.printf(24,"   %5.0f",id(power_system_load));      // load
-        it.printf(32,"   %2.3f",id(power_system_frequency)); // frequency
-        it.printf(40,"   %5.0f",id(power_import_ro));        // import_ro
-        it.printf(48,"%4.0f",id(power_production_hmke)+id(power_production_scte)+id(power_production_pv)); // solar
-        it.printf(52,"%4.0f",id(power_production_total_gross_fact)); // production
-        it.printf(58," %5.0f",id(power_import_balance));     // import balance
-        it.printf(64,"   %5.0f",id(power_import_si));        // import_si
-        it.printf(72,"   %5.0f",id(power_import_hr));        // import_hr
-        it.printf(80,"   %5.0f",id(power_import_rs));        // import_rs
+        auto power_system_load_display_value = id(power_system_load_display).active_index();
+        auto power_production_display_value = id(power_production_display).active_index();
+        auto power_solar_display_value = id(power_solar_display).active_index();
+
+        float power_system_load_data = id(power_system_load);
+        float power_production_data = id(power_production_total_gross_fact);
+        float power_solar_data = id(power_production_pv);
+
+        if (power_system_load_display_value.has_value()){
+          if (power_system_load_display_value.value() == 1) {
+            power_system_load_data += id(power_production_hspp)+id(power_production_scpp);
+          }
+        }
+        if (power_production_display_value.has_value()){
+          if (power_production_display_value.value() == 1) {
+            power_production_data -= id(power_production_pv);
+          } else if (power_production_display_value.value() == 2) {
+            power_production_data -= id(power_production_hspp)+id(power_production_scpp);
+          }
+        }
+        if (power_solar_display_value.has_value()){
+          if (power_solar_display_value.value() == 1) {
+            power_solar_data += id(power_production_hspp)+id(power_production_scpp);
+          }
+        }
+
+        it.printf(0, "   %5.0f",  id(power_import_ua));         // import_ua
+        it.printf(8, "   %5.0f",  id(power_import_sk));         // import_sk
+        it.printf(16,"   %5.0f", id(power_import_at));        // import_at
+        it.printf(24,"   %5.0f", power_system_load_data);      // load
+        it.printf(32,"   %2.3f", id(power_system_frequency)); // frequency
+        it.printf(40,"   %5.0f", id(power_import_ro));        // import_ro
+        it.printf(48,   "%4.0f", power_solar_data); // solar
+        it.printf(52,   "%4.0f", power_production_data); // production
+        it.printf(58,  " %5.0f", id(power_import_balance));     // import balance
+        it.printf(64,"   %5.0f", id(power_import_si));        // import_si
+        it.printf(72,"   %5.0f", id(power_import_hr));        // import_hr
+        it.printf(80,"   %5.0f", id(power_import_rs));        // import_rs
         // import balance bar
         int import_bar = 0;
         int load2 = id(power_production_total_gross_fact);
@@ -435,18 +455,18 @@ display:
 
       // GAS DATA
       } else if (opt.has_value() && opt.value() == 1) {
-        it.printf(0,"   %5.0f",id(gas_import_beregdaroc)/1000);       // import_ua
-        it.printf(8,"   %5.0f",id(gas_import_vecses)/1000);           // import_sk
-        it.printf(16,"   %5.0f",id(gas_import_mosonmagyarovar)/1000); // import_at
-        it.printf(24,"   %5.0f",id(gas_consumption_total)/1000);      // consumption
-        it.printf(32,"    %2.2f",id(gas_containers_ratio));           // containers ratio
-        it.printf(40,"   %5.0f",id(gas_import_csanadpalota)/1000);    // import_ro
-        it.printf(48,"%4.0f",id(gas_containers_removal)/1000);        // containers removal
-        it.printf(52,"%4.0f",id(gas_production_total)/1000);          // production
-        it.printf(58," %5.0f",id(gas_import_balance)/1000);           // import balance
-        it.printf(64,"   %5.0f",id(gas_import_kiskundorozsma)/1000);  // import_si
-        it.printf(72,"   %5.0f",id(gas_import_dravaszerdahely)/1000); // import_hr
-        it.printf(80,"   %5.0f",id(gas_import_kiskundorozsma2)/1000); // import_rs
+        it.printf(0,  "   %5.0f", id(gas_import_ua)/1000);       // import_ua
+        it.printf(8,  "   %5.0f", id(gas_import_sk)/1000);           // import_sk
+        it.printf(16, "   %5.0f", id(gas_import_at)/1000); // import_at
+        it.printf(24, "   %5.0f", id(gas_consumption_total)/1000);      // consumption
+        it.printf(32,"    %2.2f", id(gas_containers_ratio));           // containers ratio
+        it.printf(40, "   %5.0f", id(gas_import_ro)/1000);    // import_ro
+        it.printf(48,    "%4.0f", id(gas_containers_removal)/1000);        // containers removal
+        it.printf(52,    "%4.0f", id(gas_production_total)/1000);          // production
+        it.printf(58,   " %5.0f", id(gas_import_balance)/1000);           // import balance
+        it.printf(64, "   %5.0f", id(gas_import_rs2)/1000);  // import_si
+        it.printf(72, "   %5.0f", id(gas_import_hr)/1000); // import_hr
+        it.printf(80, "   %5.0f", id(gas_import_rs)/1000); // import_rs
         // import balance bar
         int import_bar = 0;
         int load2 = id(gas_consumption_total);
@@ -542,20 +562,19 @@ script:
 
                                   // production
                                   id(power_production_biomass) = root["production"]["biomass"] | 0.0;
-                                  id(power_production_coal) = root["production"]["coal"] | 0.0;
-                                  id(power_production_coal2) = root["production"]["coal2"] | 0.0;
-                                  id(power_production_extended) = root["production"]["extended"] | 0.0;
+                                  id(power_production_coal_brown) = root["production"]["coal_brown"] | 0.0;
+                                  id(power_production_coal_hard) = root["production"]["coal_hard"] | 0.0;
                                   id(power_production_gas) = root["production"]["gas"] | 0.0;
-                                  id(power_production_hmke) = root["production"]["hmke_pv"] | 0.0;
-                                  id(power_production_incinerator) = root["production"]["incinerator"] | 0.0;
+                                  id(power_production_hspp) = root["production"]["hspp"]["ust"] | 0.0;
+                                  id(power_production_waste) = root["production"]["waste"] | 0.0;
                                   id(power_production_nuclear) = root["production"]["nuclear"] | 0.0;
                                   id(power_production_oil) = root["production"]["oil"] | 0.0;
                                   id(power_production_other) = root["production"]["other"] | 0.0;
                                   id(power_production_other_renewable) = root["production"]["other_renewable"] | 0.0;
                                   id(power_production_pv) = root["production"]["pv"] | 0.0;
-                                  id(power_production_scte) = root["production"]["scte_pv"] | 0.0;
-                                  id(power_production_water) = root["production"]["water"] | 0.0;
-                                  id(power_production_water_reservoir) = root["production"]["water_reservoir"] | 0.0;
+                                  id(power_production_scpp) = root["production"]["scpp"]["ust"] | 0.0;
+                                  id(power_production_hydro_ror) = root["production"]["hydro_ror"] | 0.0;
+                                  id(power_production_hydro_reservoir) = root["production"]["hydro_reservoir"] | 0.0;
                                   id(power_production_wind) = root["production"]["wind"] | 0.0;
 
                                   // production.total
@@ -599,26 +618,24 @@ script:
                                       root["containers"]["removal"][json_key] | 0.0;
                                   id(gas_containers_store) =
                                       root["containers"]["store"][json_key] | 0.0;
-                                  id(gas_containers_sum) =
-                                      root["containers"]["sum"][json_key] | 0.0;
 
                                   // import
                                   id(gas_import_balance) =
                                       root["import"]["balance"][json_key] | 0.0;
-                                  id(gas_import_beregdaroc) =
-                                      root["import"]["beregdaroc"][json_key] | 0.0;
-                                  id(gas_import_csanadpalota) =
-                                      root["import"]["csanadpalota"][json_key] | 0.0;
-                                  id(gas_import_dravaszerdahely) =
-                                      root["import"]["dravaszerdahely"][json_key] | 0.0;
-                                  id(gas_import_kiskundorozsma) =
-                                      root["import"]["kiskundorozsma"][json_key] | 0.0;
-                                  id(gas_import_kiskundorozsma2) =
-                                      root["import"]["kiskundorozsma2"][json_key] | 0.0;
-                                  id(gas_import_mosonmagyarovar) =
-                                      root["import"]["mosonmagyarovar"][json_key] | 0.0;
-                                  id(gas_import_vecses) =
-                                      root["import"]["vecses"][json_key] | 0.0;
+                                  id(gas_import_ua) =
+                                      root["import"]["ua"][json_key] | 0.0;
+                                  id(gas_import_ro) =
+                                      root["import"]["ro"][json_key] | 0.0;
+                                  id(gas_import_hr) =
+                                      root["import"]["hr"][json_key] | 0.0;
+                                  id(gas_import_rs) =
+                                      root["import"]["rs"][json_key] | 0.0;
+                                  id(gas_import_rs2) =
+                                      root["import"]["rs2"][json_key] | 0.0;
+                                  id(gas_import_at) =
+                                      root["import"]["at"][json_key] | 0.0;
+                                  id(gas_import_sk) =
+                                      root["import"]["sk"][json_key] | 0.0;
 
                                   // production
                                   id(gas_production_total) =
@@ -725,7 +742,7 @@ select:
       sorting_weight: 3
       sorting_group_id: sg_display
   - platform: template
-    name: "Gas unit of measure"
+    name: "Gas - Unit of measure"
     id: gas_unit
     optimistic: true
     options:
@@ -740,6 +757,43 @@ select:
     web_server:
       sorting_weight: 3
       sorting_group_id: sg_display
+  - platform: template
+    name: "Power - System load display"
+    id: power_system_load_display
+    optimistic: true
+    options:
+      - Default
+      - Include Prosumer Solar
+    initial_option: Default
+    restore_value: true
+    web_server:
+      sorting_weight: 4
+      sorting_group_id: sg_display
+  - platform: template
+    name: "Power - Production display"
+    id: power_production_display
+    optimistic: true
+    options:
+      - Default
+      - Exclude Industrial PV
+      - Include Prosumer Solar
+    initial_option: Default
+    restore_value: true
+    web_server:
+      sorting_weight: 5
+      sorting_group_id: sg_display
+  - platform: template
+    name: "Power - Solar display"
+    id: power_solar_display
+    optimistic: true
+    options:
+      - Default
+      - Include Prosumer Solar
+    initial_option: Default
+    restore_value: true
+    web_server:
+      sorting_weight: 6
+      sorting_group_id: sg_display
 
 text_sensor:
   - platform: wifi_info
@@ -753,7 +807,7 @@ switch:
     id: led_test
     optimistic: true
     web_server:
-      sorting_weight: 4
+      sorting_weight: 7
       sorting_group_id: sg_display
     entity_category: config
 
