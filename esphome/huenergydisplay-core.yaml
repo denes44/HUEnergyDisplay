@@ -41,7 +41,8 @@ factory_reset:
   max_delay: 10s
 
 http_request:
-  watchdog_timeout: 5000ms
+  timeout: 3s
+  watchdog_timeout: 8192ms
 
 external_components:
   - source:
