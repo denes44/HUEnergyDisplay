@@ -875,7 +875,7 @@ font:
       "\U0000e872", # delete-trash
       "\U0000e619", # more
     ]
-  - file: "fonts/Font Awesome 7 Free-Solid-900.otf"
+  - file: "resources/Font Awesome 7 Free-Solid-900.otf"
     id: icons_big3
     size: 38
     glyphs: [
