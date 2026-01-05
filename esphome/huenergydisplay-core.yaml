@@ -305,67 +305,69 @@ display:
           auto red = Color(255, 0, 0);
           auto opt = id(displayed_data).active_index();
           if (opt.has_value() && opt.value() == 1) {
-            it.printf(2, 2, id(segment), red, "%s", id(gas_unit).current_option());
+            it.printf(2, 0, id(segment), red, "%s", id(gas_unit).current_option());
           } else {
-            it.printf(2, 2, id(segment), red, "UNITS: MW");
+            it.printf(2, 0, id(segment), red, "UNITS: MW");
           }
           id(display_statusbar).execute();
       - id: power_nuclear
         lambda: |-
           auto red = Color(255, 0, 0);
-          auto white = Color(255, 255, 255);
-          it.print(2, 2, id(icons_big2), red, "\U0000f7b9");
-          it.printf(53, 2, id(segment), red, "%4.0f MW", id(power_production_nuclear));
+          auto yellow = Color(255, 255, 0);
+          it.print(4, 7, id(icons_big3), yellow, "\U0000f7b9");
+          it.printf(53, 0, id(segment), red, "%4.0f MW", id(power_production_nuclear));
           id(display_statusbar).execute();
       - id: power_gas
         lambda: |-
           auto red = Color(255, 0, 0);
-          auto white = Color(255, 255, 255);
-          it.print(2, 2, id(icons_big), red, "\U0000ec19");
-          it.printf(53, 2, id(segment), red, "%4.0f MW", id(power_production_gas));
+          it.image(6, 11, id(logo_gas));
+          it.printf(53, 0, id(segment), red, "%4.0f MW", id(power_production_gas));
           id(display_statusbar).execute();
       - id: power_biomass
         lambda: |-
           auto red = Color(255, 0, 0);
-          auto white = Color(255, 255, 255);
-          it.print(2, 2, id(icons_big), red, "\U0000e761");
-          it.printf(53, 2, id(segment), red, "%4.0f MW", id(power_production_biomass));
+          auto green = Color(0, 255, 0);
+          it.print(3, 3, id(icons_big), green, "\U0000e761");
+          it.printf(53, 0, id(segment), red, "%4.0f MW", id(power_production_biomass));
           id(display_statusbar).execute();
       - id: power_coal
         lambda: |-
           auto red = Color(255, 0, 0);
-          it.print(2, 2, id(icons_big), red, "\U0000e47b");
-          it.printf(53, 2, id(segment), red, "%4.0f MW", id(power_production_coal_brown)+id(power_production_coal_hard));
+          it.image(3, 5, id(logo_coal));
+          it.printf(53, 0, id(segment), red, "%4.0f MW", id(power_production_coal_brown)+id(power_production_coal_hard));
           id(display_statusbar).execute();
-      - id: power_incinerator
+      - id: power_waste
         lambda: |-
           auto red = Color(255, 0, 0);
-          it.print(2, 2, id(icons_big), red, "\U0000e872");
-          it.printf(53, 2, id(segment), red, "%4.0f MW", id(power_production_waste));
+          auto brown = Color(180, 90, 0);
+          it.print(3, 1, id(icons_big), brown, "\U0000e872");
+          it.printf(53, 0, id(segment), red, "%4.0f MW", id(power_production_waste));
           id(display_statusbar).execute();
       - id: power_oil
         lambda: |-
           auto red = Color(255, 0, 0);
-          it.print(2, 2, id(icons_big), red, "\U0000ec15");
-          it.printf(53, 2, id(segment), red, "%4.0f MW", id(power_production_oil));
+          it.image(6, 10, id(logo_oil));
+          it.printf(53, 0, id(segment), red, "%4.0f MW", id(power_production_oil));
+          id(display_statusbar).execute();
+      - id: power_hydro
+        lambda: |-
+          auto red = Color(255, 0, 0);
+          auto blue = Color(0, 0, 255);
+          it.print(3, 1, id(icons_big), blue, "\U0000f084");
+          it.printf(53, 0, id(segment), red, "%4.0f MW", id(power_production_hydro_ror)+id(power_production_hydro_reservoir));
           id(display_statusbar).execute();
       - id: power_wind
         lambda: |-
           auto red = Color(255, 0, 0);
-          it.print(2, 2, id(icons_big), red, "\U0000f084");
-          it.printf(53, 2, id(segment), red, "%4.0f MW", id(power_production_hydro_ror)+id(power_production_hydro_reservoir));
-          id(display_statusbar).execute();
-      - id: power_water
-        lambda: |-
-          auto red = Color(255, 0, 0);
-          it.print(2, 2, id(icons_big), red, "\U0000ec0c");
-          it.printf(53, 2, id(segment), red, "%4.0f MW", id(power_production_wind));
+          auto grey = Color(192, 192, 192);
+          it.print(3, 2, id(icons_big), grey, "\U0000ec0c");
+          it.printf(53, 0, id(segment), red, "%4.0f MW", id(power_production_wind));
           id(display_statusbar).execute();
       - id: power_other
         lambda: |-
           auto red = Color(255, 0, 0);
-          it.print(2, 2, id(icons_big), red, "\U0000e47b");
-          it.printf(53, 2, id(segment), red, "%4.0f MW", id(power_production_other)+id(power_production_other_renewable));
+          it.print(3, 1, id(icons_big), red, "\U0000e619");
+          it.printf(53, 0, id(segment), red, "%4.0f MW", id(power_production_other)+id(power_production_other_renewable));
           id(display_statusbar).execute();
   - platform: max7219
     id: segment_disp
@@ -867,26 +869,31 @@ font:
     glyphs: [
       "\U0000ec0f", # solar
       "\U0000ec0c", # wind
-      "\U0000ec1c", # electric-bolt
-      "\U0000ebbc", # factory
-      "\U0000ec19", # gas-meter
       "\U0000f084", # water
-      "\U0000ec15", # oil-barrel
-      "\U0000e224", # valve
       "\U0000e761", # compost
       "\U0000e872", # delete-trash
-      "\U0000e47b", # other
+      "\U0000e619", # more
     ]
-  - file: "resources/Font Awesome 7 Free-Solid-900.otf"
-    id: icons_big2
-    size: 43
+  - file: "fonts/Font Awesome 7 Free-Solid-900.otf"
+    id: icons_big3
+    size: 38
     glyphs: [
       "\U0000f7b9", # radiation
-      "\U0000f46a", # flame
-      "\U0000f72e", # wind
     ]
 
 image:
   - file: https://raw.githubusercontent.com/denes44/HUEnergyDisplay/refs/heads/main/esphome/resources/logo.png
     type: binary
     id: logo_image
+  - file: https://raw.githubusercontent.com/denes44/HUEnergyDisplay/refs/heads/main/esphome/resources/coal.png
+    type: RGB
+    id: logo_coal
+    transparency: alpha_channel
+  - file: https://raw.githubusercontent.com/denes44/HUEnergyDisplay/refs/heads/main/esphome/resources/gas.png
+    type: RGB
+    id: logo_gas
+    transparency: alpha_channel
+  - file: https://raw.githubusercontent.com/denes44/HUEnergyDisplay/refs/heads/main/esphome/resources/oil.png
+    type: RGB
+    id: logo_oil
+    transparency: alpha_channel
