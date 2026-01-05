@@ -3,6 +3,14 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-01-05
+
+### Changed
+
+- Some of the production type logos were changed (gas, oil, coal, other)
+- The production type logos has different colors now instead of all being red
+- Fine tuned the HTTP request's parameters to prevent unwanted restarts
+
 ## [1.1.0] - 2026-01-04
 
 ### Added
@@ -24,8 +32,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.1] - 2025-12-21
 
-### Breaking change
 
+### Breaking change
 - The device will use the MD5 hash of the MAC address as the API Key,
   instead of a separately provided API Key
 
