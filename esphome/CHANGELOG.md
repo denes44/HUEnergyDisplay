@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Changes API paths according to the 1.0.0 version of HUEnergyAPI
+- Esphome dependency changes
 
 ## [1.2.0] - 2026-01-05
 
