@@ -12,7 +12,7 @@ esphome:
   min_version: 2025.11.0
   project:
     name: "denes44.HUEnergyDisplay"
-    version: 1.2.0
+    version: 1.3.0
   platformio_options:
     board_build.flash_mode: dio
   on_boot:
@@ -290,6 +290,8 @@ display:
       height: 76
       offset_width: 18
       offset_height: 82
+      pad_width: 0
+      pad_height: 0
     rotation: 90
     buffer_size: 50%
     invert_colors: False
@@ -564,21 +566,21 @@ script:
                                   id(power_system_frequency) = root["system"]["frequency"] | 0.0;
 
                                   // production
-                                  id(power_production_biomass) = root["production"]["biomass"] | 0.0;
-                                  id(power_production_coal_brown) = root["production"]["coal_brown"] | 0.0;
-                                  id(power_production_coal_hard) = root["production"]["coal_hard"] | 0.0;
-                                  id(power_production_gas) = root["production"]["gas"] | 0.0;
+                                  id(power_production_biomass) = root["production"]["biomass"]["total"] | 0.0;
+                                  id(power_production_coal_brown) = root["production"]["coal_brown"]["total"] | 0.0;
+                                  id(power_production_coal_hard) = root["production"]["coal_hard"]["total"] | 0.0;
+                                  id(power_production_gas) = root["production"]["gas"]["total"] | 0.0;
                                   id(power_production_hspp) = root["production"]["hspp"]["ust"] | 0.0;
-                                  id(power_production_waste) = root["production"]["waste"] | 0.0;
-                                  id(power_production_nuclear) = root["production"]["nuclear"] | 0.0;
-                                  id(power_production_oil) = root["production"]["oil"] | 0.0;
-                                  id(power_production_other) = root["production"]["other"] | 0.0;
-                                  id(power_production_other_renewable) = root["production"]["other_renewable"] | 0.0;
-                                  id(power_production_pv) = root["production"]["pv"] | 0.0;
+                                  id(power_production_waste) = root["production"]["waste"]["total"] | 0.0;
+                                  id(power_production_nuclear) = root["production"]["nuclear"]["total"] | 0.0;
+                                  id(power_production_oil) = root["production"]["oil"]["total"] | 0.0;
+                                  id(power_production_other) = root["production"]["other"]["total"] | 0.0;
+                                  id(power_production_other_renewable) = root["production"]["other_renewable"]["total"] | 0.0;
+                                  id(power_production_pv) = root["production"]["pv"]["total"] | 0.0;
                                   id(power_production_scpp) = root["production"]["scpp"]["ust"] | 0.0;
-                                  id(power_production_hydro_ror) = root["production"]["hydro_ror"] | 0.0;
-                                  id(power_production_hydro_reservoir) = root["production"]["hydro_reservoir"] | 0.0;
-                                  id(power_production_wind) = root["production"]["wind"] | 0.0;
+                                  id(power_production_hydro_ror) = root["production"]["hydro_ror"]["total"] | 0.0;
+                                  id(power_production_hydro_reservoir) = root["production"]["hydro_reservoir"]["total"] | 0.0;
+                                  id(power_production_wind) = root["production"]["wind"]["total"] | 0.0;
 
                                   // production.total
                                   id(power_production_total_gross_fact) = root["production"]["total"]["gross_fact"] | 0.0;
@@ -702,7 +704,7 @@ interval:
     then:
       - if:
           condition:
-            - lambda: 'return strcmp(id(displayed_data).current_option(), "power") == 0;'
+            - lambda: 'return id(displayed_data).current_option() == "power";'
           then:
             - if:
                 condition:
@@ -713,7 +715,7 @@ interval:
                   - display.page.show_next: lcd_disp
       - if:
           condition:
-            - lambda: 'return strcmp(id(displayed_data).current_option(), "gas") == 0;'
+            - lambda: 'return id(displayed_data).current_option() == "gas";'
           then:
             - if:
                 condition:
