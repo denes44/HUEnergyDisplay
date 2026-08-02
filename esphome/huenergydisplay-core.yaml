@@ -704,7 +704,7 @@ interval:
     then:
       - if:
           condition:
-            - lambda: 'return strcmp(id(displayed_data).current_option(), "power") == 0;'
+            - lambda: 'return id(displayed_data).current_option() == "power";'
           then:
             - if:
                 condition:
@@ -715,7 +715,7 @@ interval:
                   - display.page.show_next: lcd_disp
       - if:
           condition:
-            - lambda: 'return strcmp(id(displayed_data).current_option(), "gas") == 0;'
+            - lambda: 'return id(displayed_data).current_option() == "gas";'
           then:
             - if:
                 condition:
