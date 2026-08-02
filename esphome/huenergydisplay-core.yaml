@@ -290,6 +290,8 @@ display:
       height: 76
       offset_width: 18
       offset_height: 82
+      pad_width: 0
+      pad_height: 0
     rotation: 90
     buffer_size: 50%
     invert_colors: False
