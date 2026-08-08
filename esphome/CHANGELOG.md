@@ -3,6 +3,13 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.1] - Unreleased
+
+### Fixed
+
+- Fixed an issue with the Home Assistant update module on dashboard imported
+  installations
+
 ## [1.3.0] - 2026-08-02
 
 ### Changed
