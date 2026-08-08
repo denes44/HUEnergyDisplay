@@ -310,7 +310,7 @@ display:
           auto red = Color(255, 0, 0);
           auto opt = id(displayed_data).active_index();
           if (opt.has_value() && opt.value() == 1) {
-            it.printf(2, 0, id(segment), red, "%s", id(gas_unit).current_option());
+            it.printf(2, 0, id(segment), red, "%s", id(gas_unit).current_option().c_str());
           } else {
             it.printf(2, 0, id(segment), red, "UNITS: MW");
           }
