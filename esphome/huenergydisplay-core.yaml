@@ -294,7 +294,10 @@ display:
       offset_height: 82
       pad_width: 0
       pad_height: 0
-    rotation: 90
+    transform:
+      swap_xy: true
+      mirror_x: true
+      mirror_y: false
     buffer_size: 50%
     invert_colors: False
     pages:
