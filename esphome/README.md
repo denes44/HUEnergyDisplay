@@ -1,12 +1,12 @@
 # HUEnergyDisplay - ESPHome Firmware
 
-<img src="https://esphome.io/guides/images/made-for-esphome-black-on-white.svg" alt="Made for ESPHome logo" width="400">
+<img src="https://esphome.io/images/made-for-esphome-white-on-black.svg" alt="Made for ESPHome logo" width="400">
 
 ![Latest version](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fgithub.com%2Fdenes44%2FHUEnergyDisplay%2Freleases%2Fdownload%2Fesphome-latest%2Fmanifest.json&query=%24.version&logo=esphome&label=latest%20version&color=orange&logo=esphome)
 
 ## Firmware
 
-The default firmware to use is [firmware/huenergydisplay-esp32s3.factory.bin](firmware/huenergydisplay-esp32s3.factory.bin).
+The default firmware to use is [huenergydisplay-esp32s3.factory.bin](https://github.com/denes44/HUEnergyDisplay/releases/download/esphome-latest/huenergydisplay-esp32s3.factory.bin).
 With this firmware you can use [Improv via BLE](https://esphome.io/components/esp32_improv)
 or [Improv via Serial](https://esphome.io/components/improv_serial)
 to provision your device.
