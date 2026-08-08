@@ -890,18 +890,22 @@ font:
     ]
 
 image:
-  - file: https://raw.githubusercontent.com/denes44/HUEnergyDisplay/refs/heads/main/esphome/resources/logo.png
+  - platform: file
+    file: https://raw.githubusercontent.com/denes44/HUEnergyDisplay/refs/heads/main/esphome/resources/logo.png
     type: binary
     id: logo_image
-  - file: https://raw.githubusercontent.com/denes44/HUEnergyDisplay/refs/heads/main/esphome/resources/coal.png
+  - platform: file
+    file: https://raw.githubusercontent.com/denes44/HUEnergyDisplay/refs/heads/main/esphome/resources/coal.png
     type: RGB
     id: logo_coal
     transparency: alpha_channel
-  - file: https://raw.githubusercontent.com/denes44/HUEnergyDisplay/refs/heads/main/esphome/resources/gas.png
+  - platform: file
+    file: https://raw.githubusercontent.com/denes44/HUEnergyDisplay/refs/heads/main/esphome/resources/gas.png
     type: RGB
     id: logo_gas
     transparency: alpha_channel
-  - file: https://raw.githubusercontent.com/denes44/HUEnergyDisplay/refs/heads/main/esphome/resources/oil.png
+  - platform: file
+    file: https://raw.githubusercontent.com/denes44/HUEnergyDisplay/refs/heads/main/esphome/resources/oil.png
     type: RGB
     id: logo_oil
     transparency: alpha_channel
