@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed an issue with the Home Assistant update module on dashboard imported
   installations
 
+### Changed
+
+- Changed default device name from `energy-display` to `huenergydisplay`
+
 ## [1.3.0] - 2026-08-02
 
 ### Changed
