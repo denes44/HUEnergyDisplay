@@ -24,8 +24,6 @@ interval:
     then:
       - script.execute: check_update
 
-http_request:
-
 text_sensor:
   - platform: template
     name: Remote YAML Update
