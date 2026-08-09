@@ -6,6 +6,8 @@ on:
     paths:
       - esphome/**/*.yaml
   push:
+    branches-ignore:
+      - main
     paths:
       - esphome/**/*.yaml
   schedule:
