@@ -12,7 +12,7 @@ esphome:
   min_version: 2025.11.0
   project:
     name: "denes44.HUEnergyDisplay"
-    version: 1.3.0
+    version: 1.3.1
   platformio_options:
     board_build.flash_mode: dio
   on_boot:
@@ -41,8 +41,10 @@ factory_reset:
   max_delay: 10s
 
 http_request:
-  timeout: 3s
+  timeout: 5s
   watchdog_timeout: 8192ms
+  buffer_size_rx: 2048
+  buffer_size_tx: 2048
 
 external_components:
   - source:
@@ -292,7 +294,10 @@ display:
       offset_height: 82
       pad_width: 0
       pad_height: 0
-    rotation: 90
+    transform:
+      swap_xy: true
+      mirror_x: true
+      mirror_y: false
     buffer_size: 50%
     invert_colors: False
     pages:
@@ -308,7 +313,7 @@ display:
           auto red = Color(255, 0, 0);
           auto opt = id(displayed_data).active_index();
           if (opt.has_value() && opt.value() == 1) {
-            it.printf(2, 0, id(segment), red, "%s", id(gas_unit).current_option());
+            it.printf(2, 0, id(segment), red, "%s", id(gas_unit).current_option().c_str());
           } else {
             it.printf(2, 0, id(segment), red, "UNITS: MW");
           }
@@ -885,18 +890,22 @@ font:
     ]
 
 image:
-  - file: https://raw.githubusercontent.com/denes44/HUEnergyDisplay/refs/heads/main/esphome/resources/logo.png
+  - platform: file
+    file: https://raw.githubusercontent.com/denes44/HUEnergyDisplay/refs/heads/main/esphome/resources/logo.png
     type: binary
     id: logo_image
-  - file: https://raw.githubusercontent.com/denes44/HUEnergyDisplay/refs/heads/main/esphome/resources/coal.png
+  - platform: file
+    file: https://raw.githubusercontent.com/denes44/HUEnergyDisplay/refs/heads/main/esphome/resources/coal.png
     type: RGB
     id: logo_coal
     transparency: alpha_channel
-  - file: https://raw.githubusercontent.com/denes44/HUEnergyDisplay/refs/heads/main/esphome/resources/gas.png
+  - platform: file
+    file: https://raw.githubusercontent.com/denes44/HUEnergyDisplay/refs/heads/main/esphome/resources/gas.png
     type: RGB
     id: logo_gas
     transparency: alpha_channel
-  - file: https://raw.githubusercontent.com/denes44/HUEnergyDisplay/refs/heads/main/esphome/resources/oil.png
+  - platform: file
+    file: https://raw.githubusercontent.com/denes44/HUEnergyDisplay/refs/heads/main/esphome/resources/oil.png
     type: RGB
     id: logo_oil
     transparency: alpha_channel
