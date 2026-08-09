@@ -8,7 +8,7 @@
 # Edit these substitutions to your liking
 
 substitutions:
-  name: energy-display
+  name: huenergydisplay
   friendly_name: Energy Display
 
 
