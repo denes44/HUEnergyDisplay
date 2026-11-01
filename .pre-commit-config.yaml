@@ -13,3 +13,10 @@ repos:
   - id: requirements-txt-fixer
   - id: pretty-format-json
     args: [--autofix]
+- repo: https://github.com/DavidAnson/markdownlint-cli2
+  rev: v0.24.0
+  hooks:
+  - id: markdownlint-cli2
+    # Same rules as the CI, fix what can be fixed automatically
+    args: [--fix, --config, .github/rules/custom.markdownlint.jsonc]
+    exclude: ^\.github/pull_request_template\.md$
