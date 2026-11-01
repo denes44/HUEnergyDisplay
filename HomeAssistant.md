@@ -26,7 +26,7 @@ to open the integrations page in Home Assistant:
 
 Home Assistant should automatically recognize the device from the network.
 
-If not, you can manually add itt using the ESPHome integration:
+If not, you can manually add it using the ESPHome integration:
 
 [![Open your Home Assistant instance and start setting up a new integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=esphome)
 

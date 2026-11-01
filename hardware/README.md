@@ -21,7 +21,7 @@ picture frame, so you can mount the PCB: [pcb_cutout.pdf](pcb_cutout.pdf)
 ## Controller
 
 <img align="left" src="esp32-s3.jpg" alt="Photo of the ESP32 controller">
-The PCB is designed to accomodate an ESP32-S3 SuperMini controller.
+The PCB is designed to accommodate an ESP32-S3 SuperMini controller.
 
 The firmware is ESPHome, you can find the configuration to it in the
 [esphome](../esphome/README.md) folder.
