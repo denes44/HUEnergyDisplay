@@ -28,12 +28,12 @@ The firmware is ESPHome, you can find the configuration to it in the
 
 ### GPIO Pinout
 
-| Pin    | Function         |
-| ------ | ---------------- |
-| GPIO0  | Boot button      |
-| GPIO1  | MAX7219 CLK      |
-| GPIO12 | MAX7219 MOSI     |
-| GPIO13 | MAX7219 CS       |
-| GPIO5-10 | 2.25" TFT display |
-| GPIO4  | Ambient light sensor |
-| GPIO48 | Status Led (currently not used) |
+| Pin      | Function                        |
+| -------- | ------------------------------- |
+| GPIO0    | Boot button                     |
+| GPIO1    | MAX7219 CLK                     |
+| GPIO12   | MAX7219 MOSI                    |
+| GPIO13   | MAX7219 CS                      |
+| GPIO5-10 | 2.25" TFT display               |
+| GPIO4    | Ambient light sensor            |
+| GPIO48   | Status Led (currently not used) |
