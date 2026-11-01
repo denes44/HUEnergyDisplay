@@ -13,7 +13,7 @@ jobs:
         globs: |
           **/*.md
           !.github/pull_request_template.md
-        fix: true
+        fix: false
         config: '.github/rules/custom.markdownlint.jsonc'
   markdown-link-check:
     name: Check links
