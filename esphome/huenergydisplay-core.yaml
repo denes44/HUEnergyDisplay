@@ -841,11 +841,15 @@ binary_sensor:
     entity_category: diagnostic
 
 font:
-  - file: "resources/alarmclock.ttf"
+  - file:
+      type: web
+      url: https://raw.githubusercontent.com/denes44/HUEnergyDisplay/refs/heads/main/esphome/resources/alarmclock.ttf
     id: segment
     size: 55
     bpp: 8
-  - file: "resources/alarmclock.ttf"
+  - file:
+      type: web
+      url: https://raw.githubusercontent.com/denes44/HUEnergyDisplay/refs/heads/main/esphome/resources/alarmclock.ttf
     id: segment_20
     size: 20
     bpp: 8
@@ -883,7 +887,9 @@ font:
       "\U0000e872", # delete-trash
       "\U0000e619", # more
     ]
-  - file: "resources/Font Awesome 7 Free-Solid-900.otf"
+  - file:
+      type: web
+      url: https://raw.githubusercontent.com/denes44/HUEnergyDisplay/refs/heads/main/esphome/resources/Font%20Awesome%207%20Free-Solid-900.otf
     id: icons_big3
     size: 38
     glyphs: [
