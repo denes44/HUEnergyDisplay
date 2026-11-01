@@ -567,6 +567,8 @@ display:
           import_bar = (int) roundf((id(power_import_balance) / load2) * 8.0f);
         }
         if (import_bar > 8) { import_bar = 8; } else if (import_bar < -8) { import_bar = -8; }
+        // Always show at least one bar, so the direction is visible
+        if (import_bar == 0 && id(power_import_balance) > 0) { import_bar = 1; } else if (import_bar == 0 && id(power_import_balance) < 0) { import_bar = -1; }
         it.printf(56,"%s",letters[import_bar+8]);
 
       // GAS DATA
@@ -590,6 +592,8 @@ display:
           import_bar = (int) roundf((id(gas_import_balance) / load2) * 8.0f);
         }
         if (import_bar > 8) { import_bar = 8; } else if (import_bar < -8) { import_bar = -8; }
+        // Always show at least one bar, so the direction is visible
+        if (import_bar == 0 && id(gas_import_balance) > 0) { import_bar = 1; } else if (import_bar == 0 && id(gas_import_balance) < 0) { import_bar = -1; }
         it.printf(56,"%s",letters[import_bar+8]);
       }
 
