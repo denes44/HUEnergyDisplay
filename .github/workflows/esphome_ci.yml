@@ -5,11 +5,6 @@ on:
   pull_request:
     paths:
       - esphome/**/*.yaml
-  push:
-    branches-ignore:
-      - main
-    paths:
-      - esphome/**/*.yaml
   schedule:
     - cron: '0 0 * * 1'
 
