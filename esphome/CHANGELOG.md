@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Import/export bar now always displays at least one bar to indicate direction
+- The TFT display fonts only include the characters that are actually used,
+  making the firmware smaller
 
 ### Fixed
 

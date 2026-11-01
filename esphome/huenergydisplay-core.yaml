@@ -851,11 +851,15 @@ font:
   - file: ${resources}/alarmclock.ttf
     id: segment
     size: 55
-    bpp: 8
+    bpp: 4
+    # Only the characters of the values, "UNITS: MW", the gas units and the energy price
+    glyphs: [" -.0123456789:/IMNSTUWhm°€"]
   - file: ${resources}/alarmclock.ttf
     id: segment_20
     size: 20
     bpp: 8
+    # Only the characters of the clock and the energy price
+    glyphs: [" -.0123456789:/MW€"]
   - file:
       type: gfonts
       family: PT Sans
