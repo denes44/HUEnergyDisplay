@@ -64,39 +64,43 @@ async_http:
                   // POWER DATA
                   if (opt.has_value() && opt.value() == 0) {
                     // system
-                    id(power_system_load) = root["system"]["load"] | 0.0;
-                    id(power_system_frequency) = root["system"]["frequency"] | 0.0;
+                    JsonObject sys = root["system"];
+                    id(power_system_load) = sys["load"] | 0.0f;
+                    id(power_system_frequency) = sys["frequency"] | 0.0f;
 
                     // production
-                    id(power_production_biomass) = root["production"]["biomass"]["total"] | 0.0;
-                    id(power_production_coal_brown) = root["production"]["coal_brown"]["total"] | 0.0;
-                    id(power_production_coal_hard) = root["production"]["coal_hard"]["total"] | 0.0;
-                    id(power_production_gas) = root["production"]["gas"]["total"] | 0.0;
-                    id(power_production_hspp) = root["production"]["hspp"]["ust"] | 0.0;
-                    id(power_production_waste) = root["production"]["waste"]["total"] | 0.0;
-                    id(power_production_nuclear) = root["production"]["nuclear"]["total"] | 0.0;
-                    id(power_production_oil) = root["production"]["oil"]["total"] | 0.0;
-                    id(power_production_other) = root["production"]["other"]["total"] | 0.0;
-                    id(power_production_other_renewable) = root["production"]["other_renewable"]["total"] | 0.0;
-                    id(power_production_pv) = root["production"]["pv"]["total"] | 0.0;
-                    id(power_production_scpp) = root["production"]["scpp"]["ust"] | 0.0;
-                    id(power_production_hydro_ror) = root["production"]["hydro_ror"]["total"] | 0.0;
-                    id(power_production_hydro_reservoir) = root["production"]["hydro_reservoir"]["total"] | 0.0;
-                    id(power_production_wind) = root["production"]["wind"]["total"] | 0.0;
+                    JsonObject production = root["production"];
+                    id(power_production_biomass) = production["biomass"]["total"] | 0.0f;
+                    id(power_production_coal_brown) = production["coal_brown"]["total"] | 0.0f;
+                    id(power_production_coal_hard) = production["coal_hard"]["total"] | 0.0f;
+                    id(power_production_gas) = production["gas"]["total"] | 0.0f;
+                    id(power_production_hspp) = production["hspp"]["ust"] | 0.0f;
+                    id(power_production_waste) = production["waste"]["total"] | 0.0f;
+                    id(power_production_nuclear) = production["nuclear"]["total"] | 0.0f;
+                    id(power_production_oil) = production["oil"]["total"] | 0.0f;
+                    id(power_production_other) = production["other"]["total"] | 0.0f;
+                    id(power_production_other_renewable) = production["other_renewable"]["total"] | 0.0f;
+                    id(power_production_pv) = production["pv"]["total"] | 0.0f;
+                    id(power_production_scpp) = production["scpp"]["ust"] | 0.0f;
+                    id(power_production_hydro_ror) = production["hydro_ror"]["total"] | 0.0f;
+                    id(power_production_hydro_reservoir) = production["hydro_reservoir"]["total"] | 0.0f;
+                    id(power_production_wind) = production["wind"]["total"] | 0.0f;
 
                     // production.total
-                    id(power_production_total_gross_fact) = root["production"]["total"]["gross_fact"] | 0.0;
-                    id(power_production_total_gross_plan) = root["production"]["total"]["gross_plan"] | 0.0;
+                    JsonObject production_total = production["total"];
+                    id(power_production_total_gross_fact) = production_total["gross_fact"] | 0.0f;
+                    id(power_production_total_gross_plan) = production_total["gross_plan"] | 0.0f;
 
                     // import
-                    id(power_import_balance) = root["import"]["balance"] | 0.0;
-                    id(power_import_at) = root["import"]["at"] | 0.0;
-                    id(power_import_hr) = root["import"]["hr"] | 0.0;
-                    id(power_import_ro) = root["import"]["ro"] | 0.0;
-                    id(power_import_rs) = root["import"]["rs"] | 0.0;
-                    id(power_import_si) = root["import"]["si"] | 0.0;
-                    id(power_import_sk) = root["import"]["sk"] | 0.0;
-                    id(power_import_ua) = root["import"]["ua"] | 0.0;
+                    JsonObject imports = root["import"];
+                    id(power_import_balance) = imports["balance"] | 0.0f;
+                    id(power_import_at) = imports["at"] | 0.0f;
+                    id(power_import_hr) = imports["hr"] | 0.0f;
+                    id(power_import_ro) = imports["ro"] | 0.0f;
+                    id(power_import_rs) = imports["rs"] | 0.0f;
+                    id(power_import_si) = imports["si"] | 0.0f;
+                    id(power_import_sk) = imports["sk"] | 0.0f;
+                    id(power_import_ua) = imports["ua"] | 0.0f;
 
                   // GAS DATA
                   } else if(opt.has_value() && opt.value() == 1) {
@@ -115,38 +119,27 @@ async_http:
                     }
 
                     // consumption
-                    id(gas_consumption_total) =
-                        root["consumption"]["total"][json_key] | 0.0;
+                    id(gas_consumption_total) = root["consumption"]["total"][json_key] | 0.0f;
 
                     // containers
-                    id(gas_containers_ratio) =
-                        root["containers"]["ratio"][json_key] | 0.0;
-                    id(gas_containers_removal) =
-                        root["containers"]["removal"][json_key] | 0.0;
-                    id(gas_containers_store) =
-                        root["containers"]["store"][json_key] | 0.0;
+                    JsonObject containers = root["containers"];
+                    id(gas_containers_ratio) = containers["ratio"][json_key] | 0.0f;
+                    id(gas_containers_removal) = containers["removal"][json_key] | 0.0f;
+                    id(gas_containers_store) = containers["store"][json_key] | 0.0f;
 
                     // import
-                    id(gas_import_balance) =
-                        root["import"]["balance"][json_key] | 0.0;
-                    id(gas_import_ua) =
-                        root["import"]["ua"][json_key] | 0.0;
-                    id(gas_import_ro) =
-                        root["import"]["ro"][json_key] | 0.0;
-                    id(gas_import_hr) =
-                        root["import"]["hr"][json_key] | 0.0;
-                    id(gas_import_rs) =
-                        root["import"]["rs"][json_key] | 0.0;
-                    id(gas_import_rs2) =
-                        root["import"]["rs2"][json_key] | 0.0;
-                    id(gas_import_at) =
-                        root["import"]["at"][json_key] | 0.0;
-                    id(gas_import_sk) =
-                        root["import"]["sk"][json_key] | 0.0;
+                    JsonObject imports = root["import"];
+                    id(gas_import_balance) = imports["balance"][json_key] | 0.0f;
+                    id(gas_import_ua) = imports["ua"][json_key] | 0.0f;
+                    id(gas_import_ro) = imports["ro"][json_key] | 0.0f;
+                    id(gas_import_hr) = imports["hr"][json_key] | 0.0f;
+                    id(gas_import_rs) = imports["rs"][json_key] | 0.0f;
+                    id(gas_import_rs2) = imports["rs2"][json_key] | 0.0f;
+                    id(gas_import_at) = imports["at"][json_key] | 0.0f;
+                    id(gas_import_sk) = imports["sk"][json_key] | 0.0f;
 
                     // production
-                    id(gas_production_total) =
-                        root["production"]["total"][json_key] | 0.0;
+                    id(gas_production_total) = root["production"]["total"][json_key] | 0.0f;
                   }
 
                   return true;
