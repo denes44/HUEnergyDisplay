@@ -46,12 +46,122 @@ http_request:
   buffer_size_rx: 2048
   buffer_size_tx: 2048
 
+# Energy API requests run in a background task, so they don't block the main loop
+async_http:
+  id: api_http
+  timeout: 5s
+  on_response:
+    then:
+      - lambda: "id(latest_http_status) = status_code;"
+      - if:
+          condition:
+            lambda: return status_code == 200;
+          then:
+            - lambda: |-
+                json::parse_json(body, [](JsonObject root) -> bool {
+                  id(api_freshness) = root["is_fresh"];
+                  auto opt = id(displayed_data).active_index();
+                  // POWER DATA
+                  if (opt.has_value() && opt.value() == 0) {
+                    // system
+                    id(power_system_load) = root["system"]["load"] | 0.0;
+                    id(power_system_frequency) = root["system"]["frequency"] | 0.0;
+
+                    // production
+                    id(power_production_biomass) = root["production"]["biomass"]["total"] | 0.0;
+                    id(power_production_coal_brown) = root["production"]["coal_brown"]["total"] | 0.0;
+                    id(power_production_coal_hard) = root["production"]["coal_hard"]["total"] | 0.0;
+                    id(power_production_gas) = root["production"]["gas"]["total"] | 0.0;
+                    id(power_production_hspp) = root["production"]["hspp"]["ust"] | 0.0;
+                    id(power_production_waste) = root["production"]["waste"]["total"] | 0.0;
+                    id(power_production_nuclear) = root["production"]["nuclear"]["total"] | 0.0;
+                    id(power_production_oil) = root["production"]["oil"]["total"] | 0.0;
+                    id(power_production_other) = root["production"]["other"]["total"] | 0.0;
+                    id(power_production_other_renewable) = root["production"]["other_renewable"]["total"] | 0.0;
+                    id(power_production_pv) = root["production"]["pv"]["total"] | 0.0;
+                    id(power_production_scpp) = root["production"]["scpp"]["ust"] | 0.0;
+                    id(power_production_hydro_ror) = root["production"]["hydro_ror"]["total"] | 0.0;
+                    id(power_production_hydro_reservoir) = root["production"]["hydro_reservoir"]["total"] | 0.0;
+                    id(power_production_wind) = root["production"]["wind"]["total"] | 0.0;
+
+                    // production.total
+                    id(power_production_total_gross_fact) = root["production"]["total"]["gross_fact"] | 0.0;
+                    id(power_production_total_gross_plan) = root["production"]["total"]["gross_plan"] | 0.0;
+
+                    // import
+                    id(power_import_balance) = root["import"]["balance"] | 0.0;
+                    id(power_import_at) = root["import"]["at"] | 0.0;
+                    id(power_import_hr) = root["import"]["hr"] | 0.0;
+                    id(power_import_ro) = root["import"]["ro"] | 0.0;
+                    id(power_import_rs) = root["import"]["rs"] | 0.0;
+                    id(power_import_si) = root["import"]["si"] | 0.0;
+                    id(power_import_sk) = root["import"]["sk"] | 0.0;
+                    id(power_import_ua) = root["import"]["ua"] | 0.0;
+
+                  // GAS DATA
+                  } else if(opt.has_value() && opt.value() == 1) {
+                    // Determine JSON key from selected gas unit
+                    auto opt2 = id(gas_unit).active_index();
+                    const char *json_key;
+                    if (opt2.has_value()) {
+                      switch (opt2.value()) {
+                          case 0: json_key = "kwh"; break;
+                          case 1: json_key = "m3_0"; break;
+                          case 2: json_key = "m3_15"; break;
+                          default: json_key = "kwh"; break;
+                      }
+                    } else {
+                      json_key = "kwh";
+                    }
+
+                    // consumption
+                    id(gas_consumption_total) =
+                        root["consumption"]["total"][json_key] | 0.0;
+
+                    // containers
+                    id(gas_containers_ratio) =
+                        root["containers"]["ratio"][json_key] | 0.0;
+                    id(gas_containers_removal) =
+                        root["containers"]["removal"][json_key] | 0.0;
+                    id(gas_containers_store) =
+                        root["containers"]["store"][json_key] | 0.0;
+
+                    // import
+                    id(gas_import_balance) =
+                        root["import"]["balance"][json_key] | 0.0;
+                    id(gas_import_ua) =
+                        root["import"]["ua"][json_key] | 0.0;
+                    id(gas_import_ro) =
+                        root["import"]["ro"][json_key] | 0.0;
+                    id(gas_import_hr) =
+                        root["import"]["hr"][json_key] | 0.0;
+                    id(gas_import_rs) =
+                        root["import"]["rs"][json_key] | 0.0;
+                    id(gas_import_rs2) =
+                        root["import"]["rs2"][json_key] | 0.0;
+                    id(gas_import_at) =
+                        root["import"]["at"][json_key] | 0.0;
+                    id(gas_import_sk) =
+                        root["import"]["sk"][json_key] | 0.0;
+
+                    // production
+                    id(gas_production_total) =
+                        root["production"]["total"][json_key] | 0.0;
+                  }
+
+                  return true;
+                });
+          else:
+            - logger.log:
+                format: "Error: Response status: %d, message %s"
+                args: [ 'status_code', 'body.c_str()' ]
+
 external_components:
   - source:
       type: git
       url: https://github.com/denes44/HUEnergyDisplay
       ref: main
-    components: [ max7219 ]
+    components: [ max7219, async_http ]
 
 globals:
   # Power - System
@@ -526,7 +636,8 @@ script:
           condition:
             wifi.connected:
           then:
-            - http_request.get:
+            - async_http.get:
+                id: api_http
                 url: !lambda |-
                   return ((std::string) "https://api.440442.xyz/energy/" + id(displayed_data).current_option()).c_str();
                 request_headers:
@@ -552,112 +663,6 @@ script:
                   User-Agent: !lambda |-
                     static std::string ua = std::string("esphome-") + ESPHOME_PROJECT_VERSION;
                     return ua.c_str();
-                capture_response: true
-                on_response:
-                  then:
-                    - lambda: "id(latest_http_status) = response->status_code;"
-                    - if:
-                        condition:
-                          lambda: return response->status_code == 200;
-                        then:
-                          - lambda: |-
-                              json::parse_json(body, [](JsonObject root) -> bool {
-                                id(api_freshness) = root["is_fresh"];
-                                auto opt = id(displayed_data).active_index();
-                                // POWER DATA
-                                if (opt.has_value() && opt.value() == 0) {
-                                  // system
-                                  id(power_system_load) = root["system"]["load"] | 0.0;
-                                  id(power_system_frequency) = root["system"]["frequency"] | 0.0;
-
-                                  // production
-                                  id(power_production_biomass) = root["production"]["biomass"]["total"] | 0.0;
-                                  id(power_production_coal_brown) = root["production"]["coal_brown"]["total"] | 0.0;
-                                  id(power_production_coal_hard) = root["production"]["coal_hard"]["total"] | 0.0;
-                                  id(power_production_gas) = root["production"]["gas"]["total"] | 0.0;
-                                  id(power_production_hspp) = root["production"]["hspp"]["ust"] | 0.0;
-                                  id(power_production_waste) = root["production"]["waste"]["total"] | 0.0;
-                                  id(power_production_nuclear) = root["production"]["nuclear"]["total"] | 0.0;
-                                  id(power_production_oil) = root["production"]["oil"]["total"] | 0.0;
-                                  id(power_production_other) = root["production"]["other"]["total"] | 0.0;
-                                  id(power_production_other_renewable) = root["production"]["other_renewable"]["total"] | 0.0;
-                                  id(power_production_pv) = root["production"]["pv"]["total"] | 0.0;
-                                  id(power_production_scpp) = root["production"]["scpp"]["ust"] | 0.0;
-                                  id(power_production_hydro_ror) = root["production"]["hydro_ror"]["total"] | 0.0;
-                                  id(power_production_hydro_reservoir) = root["production"]["hydro_reservoir"]["total"] | 0.0;
-                                  id(power_production_wind) = root["production"]["wind"]["total"] | 0.0;
-
-                                  // production.total
-                                  id(power_production_total_gross_fact) = root["production"]["total"]["gross_fact"] | 0.0;
-                                  id(power_production_total_gross_plan) = root["production"]["total"]["gross_plan"] | 0.0;
-
-                                  // import
-                                  id(power_import_balance) = root["import"]["balance"] | 0.0;
-                                  id(power_import_at) = root["import"]["at"] | 0.0;
-                                  id(power_import_hr) = root["import"]["hr"] | 0.0;
-                                  id(power_import_ro) = root["import"]["ro"] | 0.0;
-                                  id(power_import_rs) = root["import"]["rs"] | 0.0;
-                                  id(power_import_si) = root["import"]["si"] | 0.0;
-                                  id(power_import_sk) = root["import"]["sk"] | 0.0;
-                                  id(power_import_ua) = root["import"]["ua"] | 0.0;
-
-                                // GAS DATA
-                                } else if(opt.has_value() && opt.value() == 1) {
-                                  // Determine JSON key from selected gas unit
-                                  auto opt2 = id(gas_unit).active_index();
-                                  const char *json_key;
-                                  if (opt2.has_value()) {
-                                    switch (opt2.value()) {
-                                        case 0: json_key = "kwh"; break;
-                                        case 1: json_key = "m3_0"; break;
-                                        case 2: json_key = "m3_15"; break;
-                                        default: json_key = "kwh"; break;
-                                    }
-                                  } else {
-                                    json_key = "kwh";
-                                  }
-
-                                  // consumption
-                                  id(gas_consumption_total) =
-                                      root["consumption"]["total"][json_key] | 0.0;
-
-                                  // containers
-                                  id(gas_containers_ratio) =
-                                      root["containers"]["ratio"][json_key] | 0.0;
-                                  id(gas_containers_removal) =
-                                      root["containers"]["removal"][json_key] | 0.0;
-                                  id(gas_containers_store) =
-                                      root["containers"]["store"][json_key] | 0.0;
-
-                                  // import
-                                  id(gas_import_balance) =
-                                      root["import"]["balance"][json_key] | 0.0;
-                                  id(gas_import_ua) =
-                                      root["import"]["ua"][json_key] | 0.0;
-                                  id(gas_import_ro) =
-                                      root["import"]["ro"][json_key] | 0.0;
-                                  id(gas_import_hr) =
-                                      root["import"]["hr"][json_key] | 0.0;
-                                  id(gas_import_rs) =
-                                      root["import"]["rs"][json_key] | 0.0;
-                                  id(gas_import_rs2) =
-                                      root["import"]["rs2"][json_key] | 0.0;
-                                  id(gas_import_at) =
-                                      root["import"]["at"][json_key] | 0.0;
-                                  id(gas_import_sk) =
-                                      root["import"]["sk"][json_key] | 0.0;
-
-                                  // production
-                                  id(gas_production_total) =
-                                      root["production"]["total"][json_key] | 0.0;
-                                }
-
-                                return true;
-                              });
-                        else:
-                          - logger.log:
-                              format: "Error: Response status: %d, message %s"
-                              args: [ 'response->status_code', 'body.c_str()' ]
   - id: display_statusbar
     then:
       - lambda: |-
