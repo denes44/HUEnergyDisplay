@@ -7,19 +7,12 @@ jobs:
     name: Markdown Lint
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v6
-      with:
-        fetch-depth: 0
-    - uses: tj-actions/changed-files@v47
-      id: changed-files
-      with:
-        files: '**/*.md'
-        separator: ","
+    - uses: actions/checkout@v7
     - uses: DavidAnson/markdownlint-cli2-action@v25
-      if: steps.changed-files.outputs.any_changed == 'true'
       with:
-        globs: ${{ steps.changed-files.outputs.all_changed_files }}
-        separator: ","
+        globs: |
+          **/*.md
+          !.github/pull_request_template.md
         fix: true
         config: '.github/rules/custom.markdownlint.jsonc'
   markdown-link-check:

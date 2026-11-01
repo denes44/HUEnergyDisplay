@@ -52,8 +52,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.1] - 2025-12-21
 
-
 ### Breaking change
+
 - The device will use the MD5 hash of the MAC address as the API Key,
   instead of a separately provided API Key
 
