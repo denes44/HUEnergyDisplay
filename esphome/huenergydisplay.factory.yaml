@@ -7,6 +7,8 @@
 substitutions:
   name: huenergydisplay
   friendly_name: Energy Display
+  # Use the components locally instead of the main branch
+  components_source: components
 
 packages:
   core: !include huenergydisplay-core.yaml

@@ -4,6 +4,9 @@
 # Core functionately                         #
 ##############################################
 
+substitutions:
+  components_source: github://denes44/HUEnergyDisplay@main
+
 # ESPHome & Board
 
 esphome:
@@ -153,10 +156,7 @@ async_http:
                 args: [ 'status_code', 'body.c_str()' ]
 
 external_components:
-  - source:
-      type: git
-      url: https://github.com/denes44/HUEnergyDisplay
-      ref: main
+  - source: ${components_source}
     components: [ max7219, async_http ]
 
 globals:
