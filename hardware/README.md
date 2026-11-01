@@ -18,25 +18,22 @@ picture frame, so you can mount the PCB: [pcb_cutout.pdf](pcb_cutout.pdf)
 
 ## Schematics
 
-
-
 ## Controller
 
 <img align="left" src="esp32-s3.jpg" alt="Photo of the ESP32 controller">
-The PCB is designed to accomodate an ESP32-S3 SuperMini controller.
+The PCB is designed to accommodate an ESP32-S3 SuperMini controller.
 
 The firmware is ESPHome, you can find the configuration to it in the
 [esphome](../esphome/README.md) folder.
 
-
 ### GPIO Pinout
 
-| Pin    | Function         |
-| ------ | ---------------- |
-| GPIO0  | Boot button      |
-| GPIO1  | MAX7219 CLK      |
-| GPIO12 | MAX7219 MOSI     |
-| GPIO13 | MAX7219 CS       |
-| GPIO5-10 | 2.25" TFT display |
-| GPIO4  | Ambient light sensor |
-| GPIO48 | Status Led (currently not used) |
+| Pin      | Function                        |
+| -------- | ------------------------------- |
+| GPIO0    | Boot button                     |
+| GPIO1    | MAX7219 CLK                     |
+| GPIO12   | MAX7219 MOSI                    |
+| GPIO13   | MAX7219 CS                      |
+| GPIO5-10 | 2.25" TFT display               |
+| GPIO4    | Ambient light sensor            |
+| GPIO48   | Status Led (currently not used) |

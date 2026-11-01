@@ -1,8 +1,8 @@
 # HUEnergyDisplay
 
 ![Based on ESP32-S3 board](https://img.shields.io/badge/hardware-ESP32--S3-blue?logo=espressif)
-![With ESPHome as a firmare](https://img.shields.io/badge/firmware-esphome-blue?logo=esphome)
-![Home Assistant Compatible](https://img.shields.io/badge/homassistant-compatible-blue?logo=homeassistant)
+![With ESPHome as a firmware](https://img.shields.io/badge/firmware-esphome-blue?logo=esphome)
+![Home Assistant Compatible](https://img.shields.io/badge/homeassistant-compatible-blue?logo=homeassistant)
 
 <img align="left" src="hardware/pcb.jpg" width="400" alt="Design of the PCB">
 
@@ -19,7 +19,7 @@ status and other miscellaneous data.
 | Frequency | Storage container ratio |
 | Power plant production | Production |
 | Solar production | Storage extraction |
-| Import/export to neighbouring contries, and total balance | Import/export to neighbouring contries, and total balance |
+| Import/export to neighbouring countries, and total balance | Import/export to neighbouring countries, and total balance |
 | Detailed power plant production on the TFT display | |
 
 If you are looking for the easiest way to **start using your display
@@ -35,15 +35,15 @@ can be found in the **[hardware](hardware/README.md)** folder.
 
 ### ESPHome
 
-The display uses an ESP32-S3 controller and ESPHome as it's firmware.
+The display uses an ESP32-S3 controller and ESPHome as its firmware.
 
 More information about the ESPHome firmware can be found in the
 **[esphome](esphome/README.md)** folder.
 
 ## API
 
-The display is using it's own private API, which collect and processes
-the neccessary datas, and present it in an easy JSON format to the on-board
+The display is using its own private API, which collects and processes
+the necessary data, and presents it in an easy JSON format to the on-board
 controller.
 
 The API requires an API Key. By default, the displays are using the MD5 hash
