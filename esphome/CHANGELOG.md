@@ -3,6 +3,24 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - Unreleased
+
+### Changed
+
+- Import/export bar now always displays at least one bar to indicate direction
+
+### Fixed
+
+- The API request now runs in a background task, so slow requests,
+  DNS lookups or TLS handshakes no longer block the main loop
+  - The connection to the API is kept alive between updates
+    making the requests faster
+- The API error icon is now shown when the API can't be reached at all
+  (connection error or timeout), not only on an error response
+- The Home Assistant update check no longer runs twice on every boot
+- Fixed the dashboard imported configuration failing to compile, because the
+  font files couldn't be found
+
 ## [1.3.1] - 2026-08-09
 
 ### Fixed
