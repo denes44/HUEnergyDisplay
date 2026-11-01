@@ -50,6 +50,9 @@ http_request:
 async_http:
   id: api_http
   timeout: 5s
+  on_error:
+    # No response at all (DNS, connection or TLS failure, timeout)
+    - lambda: "id(latest_http_status) = 0;"
   on_response:
     then:
       - lambda: "id(latest_http_status) = status_code;"
