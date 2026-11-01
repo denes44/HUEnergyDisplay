@@ -6,6 +6,9 @@
 
 substitutions:
   components_source: github://denes44/HUEnergyDisplay@main
+  # Where the fonts and images are loaded from: an URL or a local folder.
+  # The factory configuration uses the local folder, like the components.
+  resources: https://raw.githubusercontent.com/denes44/HUEnergyDisplay/refs/heads/main/esphome/resources
 
 # ESPHome & Board
 
@@ -845,15 +848,11 @@ binary_sensor:
     entity_category: diagnostic
 
 font:
-  - file:
-      type: web
-      url: https://raw.githubusercontent.com/denes44/HUEnergyDisplay/refs/heads/main/esphome/resources/alarmclock.ttf
+  - file: ${resources}/alarmclock.ttf
     id: segment
     size: 55
     bpp: 8
-  - file:
-      type: web
-      url: https://raw.githubusercontent.com/denes44/HUEnergyDisplay/refs/heads/main/esphome/resources/alarmclock.ttf
+  - file: ${resources}/alarmclock.ttf
     id: segment_20
     size: 20
     bpp: 8
@@ -891,9 +890,7 @@ font:
       "\U0000e872", # delete-trash
       "\U0000e619", # more
     ]
-  - file:
-      type: web
-      url: https://raw.githubusercontent.com/denes44/HUEnergyDisplay/refs/heads/main/esphome/resources/Font%20Awesome%207%20Free-Solid-900.otf
+  - file: ${resources}/fa-solid-900.otf
     id: icons_big3
     size: 38
     glyphs: [
@@ -902,21 +899,21 @@ font:
 
 image:
   - platform: file
-    file: https://raw.githubusercontent.com/denes44/HUEnergyDisplay/refs/heads/main/esphome/resources/logo.png
+    file: ${resources}/logo.png
     type: binary
     id: logo_image
   - platform: file
-    file: https://raw.githubusercontent.com/denes44/HUEnergyDisplay/refs/heads/main/esphome/resources/coal.png
+    file: ${resources}/coal.png
     type: RGB
     id: logo_coal
     transparency: alpha_channel
   - platform: file
-    file: https://raw.githubusercontent.com/denes44/HUEnergyDisplay/refs/heads/main/esphome/resources/gas.png
+    file: ${resources}/gas.png
     type: RGB
     id: logo_gas
     transparency: alpha_channel
   - platform: file
-    file: https://raw.githubusercontent.com/denes44/HUEnergyDisplay/refs/heads/main/esphome/resources/oil.png
+    file: ${resources}/oil.png
     type: RGB
     id: logo_oil
     transparency: alpha_channel

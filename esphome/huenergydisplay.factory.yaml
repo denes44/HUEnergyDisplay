@@ -9,6 +9,8 @@ substitutions:
   friendly_name: Energy Display
   # Use the components locally instead of the main branch
   components_source: components
+  # Use the fonts and images locally instead of the main branch
+  resources: resources
 
 packages:
   core: !include huenergydisplay-core.yaml
