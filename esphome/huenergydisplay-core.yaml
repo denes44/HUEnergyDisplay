@@ -4,15 +4,20 @@
 # Core functionality                         #
 ##############################################
 
+substitutions:
+  project_version: 1.4.0
+  components_source: github://denes44/HUEnergyDisplay@esphome-${project_version}
+  resources: https://raw.githubusercontent.com/denes44/HUEnergyDisplay/refs/tags/esphome-${project_version}/esphome/resources
+
 # ESPHome & Board
 
 esphome:
   name: ${name}
   friendly_name: ${friendly_name}
-  min_version: 2025.11.0
+  min_version: 2026.9.0
   project:
     name: "denes44.HUEnergyDisplay"
-    version: 1.3.1
+    version: ${project_version}
   platformio_options:
     board_build.flash_mode: dio
   on_boot:
@@ -46,12 +51,117 @@ http_request:
   buffer_size_rx: 2048
   buffer_size_tx: 2048
 
+async_http:
+  id: api_http
+  timeout: 5s
+  on_error:
+    # No response at all (DNS, connection or TLS failure, timeout)
+    - lambda: "id(latest_http_status) = 0;"
+  on_response:
+    then:
+      - lambda: "id(latest_http_status) = status_code;"
+      - if:
+          condition:
+            lambda: return status_code == 200;
+          then:
+            - lambda: |-
+                json::parse_json(body, [](JsonObject root) -> bool {
+                  id(api_freshness) = root["is_fresh"];
+                  auto opt = id(displayed_data).active_index();
+                  // POWER DATA
+                  if (opt.has_value() && opt.value() == 0) {
+                    // system
+                    JsonObject sys = root["system"];
+                    id(power_system_load) = sys["load"] | 0.0f;
+                    id(power_system_frequency) = sys["frequency"] | 0.0f;
+
+                    // production
+                    JsonObject production = root["production"];
+                    id(power_production_biomass) = production["biomass"]["total"] | 0.0f;
+                    id(power_production_coal_brown) = production["coal_brown"]["total"] | 0.0f;
+                    id(power_production_coal_hard) = production["coal_hard"]["total"] | 0.0f;
+                    id(power_production_gas) = production["gas"]["total"] | 0.0f;
+                    id(power_production_hspp) = production["hspp"]["ust"] | 0.0f;
+                    id(power_production_waste) = production["waste"]["total"] | 0.0f;
+                    id(power_production_nuclear) = production["nuclear"]["total"] | 0.0f;
+                    id(power_production_oil) = production["oil"]["total"] | 0.0f;
+                    id(power_production_other) = production["other"]["total"] | 0.0f;
+                    id(power_production_other_renewable) = production["other_renewable"]["total"] | 0.0f;
+                    id(power_production_pv) = production["pv"]["total"] | 0.0f;
+                    id(power_production_scpp) = production["scpp"]["ust"] | 0.0f;
+                    id(power_production_hydro_ror) = production["hydro_ror"]["total"] | 0.0f;
+                    id(power_production_hydro_reservoir) = production["hydro_reservoir"]["total"] | 0.0f;
+                    id(power_production_wind) = production["wind"]["total"] | 0.0f;
+
+                    // production.total
+                    JsonObject production_total = production["total"];
+                    id(power_production_total_gross_fact) = production_total["gross_fact"] | 0.0f;
+                    id(power_production_total_gross_plan) = production_total["gross_plan"] | 0.0f;
+
+                    // import
+                    JsonObject imports = root["import"];
+                    id(power_import_balance) = imports["balance"] | 0.0f;
+                    id(power_import_at) = imports["at"] | 0.0f;
+                    id(power_import_hr) = imports["hr"] | 0.0f;
+                    id(power_import_ro) = imports["ro"] | 0.0f;
+                    id(power_import_rs) = imports["rs"] | 0.0f;
+                    id(power_import_si) = imports["si"] | 0.0f;
+                    id(power_import_sk) = imports["sk"] | 0.0f;
+                    id(power_import_ua) = imports["ua"] | 0.0f;
+
+                    // price
+                    id(power_price) = root["price"]["day_ahead"];
+
+                  // GAS DATA
+                  } else if(opt.has_value() && opt.value() == 1) {
+                    // Determine JSON key from selected gas unit
+                    auto opt2 = id(gas_unit).active_index();
+                    const char *json_key;
+                    if (opt2.has_value()) {
+                      switch (opt2.value()) {
+                          case 0: json_key = "kwh"; break;
+                          case 1: json_key = "m3_0"; break;
+                          case 2: json_key = "m3_15"; break;
+                          default: json_key = "kwh"; break;
+                      }
+                    } else {
+                      json_key = "kwh";
+                    }
+
+                    // consumption
+                    id(gas_consumption_total) = root["consumption"]["total"][json_key] | 0.0f;
+
+                    // containers
+                    JsonObject containers = root["containers"];
+                    id(gas_containers_ratio) = containers["ratio"][json_key] | 0.0f;
+                    id(gas_containers_removal) = containers["removal"][json_key] | 0.0f;
+                    id(gas_containers_store) = containers["store"][json_key] | 0.0f;
+
+                    // import
+                    JsonObject imports = root["import"];
+                    id(gas_import_balance) = imports["balance"][json_key] | 0.0f;
+                    id(gas_import_ua) = imports["ua"][json_key] | 0.0f;
+                    id(gas_import_ro) = imports["ro"][json_key] | 0.0f;
+                    id(gas_import_hr) = imports["hr"][json_key] | 0.0f;
+                    id(gas_import_rs) = imports["rs"][json_key] | 0.0f;
+                    id(gas_import_rs2) = imports["rs2"][json_key] | 0.0f;
+                    id(gas_import_at) = imports["at"][json_key] | 0.0f;
+                    id(gas_import_sk) = imports["sk"][json_key] | 0.0f;
+
+                    // production
+                    id(gas_production_total) = root["production"]["total"][json_key] | 0.0f;
+                  }
+
+                  return true;
+                });
+          else:
+            - logger.log:
+                format: "Error: Response status: %d, message %s"
+                args: [ 'status_code', 'body.c_str()' ]
+
 external_components:
-  - source:
-      type: git
-      url: https://github.com/denes44/HUEnergyDisplay
-      ref: main
-    components: [ max7219 ]
+  - source: ${components_source}
+    components: [ max7219, async_http ]
 
 globals:
   # Power - System
@@ -112,6 +222,10 @@ globals:
   - id: power_import_sk
     type: float
   - id: power_import_ua
+    type: float
+
+  # Power - Price
+  - id: power_price
     type: float
 
   # Gas - Consumption
@@ -298,7 +412,8 @@ display:
       swap_xy: true
       mirror_x: true
       mirror_y: false
-    buffer_size: 50%
+    data_rate: 40MHz
+    buffer_size: 100%
     invert_colors: False
     pages:
       - id: logo1
@@ -318,64 +433,70 @@ display:
             it.printf(2, 0, id(segment), red, "UNITS: MW");
           }
           id(display_statusbar).execute();
+      - id: power_price_disp
+        lambda: |-
+          auto green = Color(0, 255, 0);
+          it.image(3, 5, id(logo_money));
+          it.printf(it.get_width() - 1, 0, id(segment), green, display::TextAlign::TOP_RIGHT, "%4.0f €", id(power_price));
+          id(display_statusbar).execute();
       - id: power_nuclear
         lambda: |-
           auto red = Color(255, 0, 0);
           auto yellow = Color(255, 255, 0);
           it.print(4, 7, id(icons_big3), yellow, "\U0000f7b9");
-          it.printf(53, 0, id(segment), red, "%4.0f MW", id(power_production_nuclear));
+          it.printf(it.get_width() - 1, 0, id(segment), red, display::TextAlign::TOP_RIGHT, "%4.0f MW", id(power_production_nuclear));
           id(display_statusbar).execute();
       - id: power_gas
         lambda: |-
           auto red = Color(255, 0, 0);
           it.image(6, 11, id(logo_gas));
-          it.printf(53, 0, id(segment), red, "%4.0f MW", id(power_production_gas));
+          it.printf(it.get_width() - 1, 0, id(segment), red, display::TextAlign::TOP_RIGHT, "%4.0f MW", id(power_production_gas));
           id(display_statusbar).execute();
       - id: power_biomass
         lambda: |-
           auto red = Color(255, 0, 0);
           auto green = Color(0, 255, 0);
           it.print(3, 3, id(icons_big), green, "\U0000e761");
-          it.printf(53, 0, id(segment), red, "%4.0f MW", id(power_production_biomass));
+          it.printf(it.get_width() - 1, 0, id(segment), red, display::TextAlign::TOP_RIGHT, "%4.0f MW", id(power_production_biomass));
           id(display_statusbar).execute();
       - id: power_coal
         lambda: |-
           auto red = Color(255, 0, 0);
           it.image(3, 5, id(logo_coal));
-          it.printf(53, 0, id(segment), red, "%4.0f MW", id(power_production_coal_brown)+id(power_production_coal_hard));
+          it.printf(it.get_width() - 1, 0, id(segment), red, display::TextAlign::TOP_RIGHT, "%4.0f MW", id(power_production_coal_brown)+id(power_production_coal_hard));
           id(display_statusbar).execute();
       - id: power_waste
         lambda: |-
           auto red = Color(255, 0, 0);
           auto brown = Color(180, 90, 0);
           it.print(3, 1, id(icons_big), brown, "\U0000e872");
-          it.printf(53, 0, id(segment), red, "%4.0f MW", id(power_production_waste));
+          it.printf(it.get_width() - 1, 0, id(segment), red, display::TextAlign::TOP_RIGHT, "%4.0f MW", id(power_production_waste));
           id(display_statusbar).execute();
       - id: power_oil
         lambda: |-
           auto red = Color(255, 0, 0);
           it.image(6, 10, id(logo_oil));
-          it.printf(53, 0, id(segment), red, "%4.0f MW", id(power_production_oil));
+          it.printf(it.get_width() - 1, 0, id(segment), red, display::TextAlign::TOP_RIGHT, "%4.0f MW", id(power_production_oil));
           id(display_statusbar).execute();
       - id: power_hydro
         lambda: |-
           auto red = Color(255, 0, 0);
           auto blue = Color(0, 0, 255);
           it.print(3, 1, id(icons_big), blue, "\U0000f084");
-          it.printf(53, 0, id(segment), red, "%4.0f MW", id(power_production_hydro_ror)+id(power_production_hydro_reservoir));
+          it.printf(it.get_width() - 1, 0, id(segment), red, display::TextAlign::TOP_RIGHT, "%4.0f MW", id(power_production_hydro_ror)+id(power_production_hydro_reservoir));
           id(display_statusbar).execute();
       - id: power_wind
         lambda: |-
           auto red = Color(255, 0, 0);
           auto grey = Color(192, 192, 192);
           it.print(3, 2, id(icons_big), grey, "\U0000ec0c");
-          it.printf(53, 0, id(segment), red, "%4.0f MW", id(power_production_wind));
+          it.printf(it.get_width() - 1, 0, id(segment), red, display::TextAlign::TOP_RIGHT, "%4.0f MW", id(power_production_wind));
           id(display_statusbar).execute();
       - id: power_other
         lambda: |-
           auto red = Color(255, 0, 0);
           it.print(3, 1, id(icons_big), red, "\U0000e619");
-          it.printf(53, 0, id(segment), red, "%4.0f MW", id(power_production_other)+id(power_production_other_renewable));
+          it.printf(it.get_width() - 1, 0, id(segment), red, display::TextAlign::TOP_RIGHT, "%4.0f MW", id(power_production_other)+id(power_production_other_renewable));
           id(display_statusbar).execute();
   - platform: max7219
     id: segment_disp
@@ -461,6 +582,8 @@ display:
           import_bar = (int) roundf((id(power_import_balance) / load2) * 8.0f);
         }
         if (import_bar > 8) { import_bar = 8; } else if (import_bar < -8) { import_bar = -8; }
+        // Always show at least one bar, so the direction is visible
+        if (import_bar == 0 && id(power_import_balance) > 0) { import_bar = 1; } else if (import_bar == 0 && id(power_import_balance) < 0) { import_bar = -1; }
         it.printf(56,"%s",letters[import_bar+8]);
 
       // GAS DATA
@@ -484,6 +607,8 @@ display:
           import_bar = (int) roundf((id(gas_import_balance) / load2) * 8.0f);
         }
         if (import_bar > 8) { import_bar = 8; } else if (import_bar < -8) { import_bar = -8; }
+        // Always show at least one bar, so the direction is visible
+        if (import_bar == 0 && id(gas_import_balance) > 0) { import_bar = 1; } else if (import_bar == 0 && id(gas_import_balance) < 0) { import_bar = -1; }
         it.printf(56,"%s",letters[import_bar+8]);
       }
 
@@ -526,7 +651,8 @@ script:
           condition:
             wifi.connected:
           then:
-            - http_request.get:
+            - async_http.get:
+                id: api_http
                 url: !lambda |-
                   return ((std::string) "https://api.440442.xyz/energy/" + id(displayed_data).current_option()).c_str();
                 request_headers:
@@ -552,112 +678,6 @@ script:
                   User-Agent: !lambda |-
                     static std::string ua = std::string("esphome-") + ESPHOME_PROJECT_VERSION;
                     return ua.c_str();
-                capture_response: true
-                on_response:
-                  then:
-                    - lambda: "id(latest_http_status) = response->status_code;"
-                    - if:
-                        condition:
-                          lambda: return response->status_code == 200;
-                        then:
-                          - lambda: |-
-                              json::parse_json(body, [](JsonObject root) -> bool {
-                                id(api_freshness) = root["is_fresh"];
-                                auto opt = id(displayed_data).active_index();
-                                // POWER DATA
-                                if (opt.has_value() && opt.value() == 0) {
-                                  // system
-                                  id(power_system_load) = root["system"]["load"] | 0.0;
-                                  id(power_system_frequency) = root["system"]["frequency"] | 0.0;
-
-                                  // production
-                                  id(power_production_biomass) = root["production"]["biomass"]["total"] | 0.0;
-                                  id(power_production_coal_brown) = root["production"]["coal_brown"]["total"] | 0.0;
-                                  id(power_production_coal_hard) = root["production"]["coal_hard"]["total"] | 0.0;
-                                  id(power_production_gas) = root["production"]["gas"]["total"] | 0.0;
-                                  id(power_production_hspp) = root["production"]["hspp"]["ust"] | 0.0;
-                                  id(power_production_waste) = root["production"]["waste"]["total"] | 0.0;
-                                  id(power_production_nuclear) = root["production"]["nuclear"]["total"] | 0.0;
-                                  id(power_production_oil) = root["production"]["oil"]["total"] | 0.0;
-                                  id(power_production_other) = root["production"]["other"]["total"] | 0.0;
-                                  id(power_production_other_renewable) = root["production"]["other_renewable"]["total"] | 0.0;
-                                  id(power_production_pv) = root["production"]["pv"]["total"] | 0.0;
-                                  id(power_production_scpp) = root["production"]["scpp"]["ust"] | 0.0;
-                                  id(power_production_hydro_ror) = root["production"]["hydro_ror"]["total"] | 0.0;
-                                  id(power_production_hydro_reservoir) = root["production"]["hydro_reservoir"]["total"] | 0.0;
-                                  id(power_production_wind) = root["production"]["wind"]["total"] | 0.0;
-
-                                  // production.total
-                                  id(power_production_total_gross_fact) = root["production"]["total"]["gross_fact"] | 0.0;
-                                  id(power_production_total_gross_plan) = root["production"]["total"]["gross_plan"] | 0.0;
-
-                                  // import
-                                  id(power_import_balance) = root["import"]["balance"] | 0.0;
-                                  id(power_import_at) = root["import"]["at"] | 0.0;
-                                  id(power_import_hr) = root["import"]["hr"] | 0.0;
-                                  id(power_import_ro) = root["import"]["ro"] | 0.0;
-                                  id(power_import_rs) = root["import"]["rs"] | 0.0;
-                                  id(power_import_si) = root["import"]["si"] | 0.0;
-                                  id(power_import_sk) = root["import"]["sk"] | 0.0;
-                                  id(power_import_ua) = root["import"]["ua"] | 0.0;
-
-                                // GAS DATA
-                                } else if(opt.has_value() && opt.value() == 1) {
-                                  // Determine JSON key from selected gas unit
-                                  auto opt2 = id(gas_unit).active_index();
-                                  const char *json_key;
-                                  if (opt2.has_value()) {
-                                    switch (opt2.value()) {
-                                        case 0: json_key = "kwh"; break;
-                                        case 1: json_key = "m3_0"; break;
-                                        case 2: json_key = "m3_15"; break;
-                                        default: json_key = "kwh"; break;
-                                    }
-                                  } else {
-                                    json_key = "kwh";
-                                  }
-
-                                  // consumption
-                                  id(gas_consumption_total) =
-                                      root["consumption"]["total"][json_key] | 0.0;
-
-                                  // containers
-                                  id(gas_containers_ratio) =
-                                      root["containers"]["ratio"][json_key] | 0.0;
-                                  id(gas_containers_removal) =
-                                      root["containers"]["removal"][json_key] | 0.0;
-                                  id(gas_containers_store) =
-                                      root["containers"]["store"][json_key] | 0.0;
-
-                                  // import
-                                  id(gas_import_balance) =
-                                      root["import"]["balance"][json_key] | 0.0;
-                                  id(gas_import_ua) =
-                                      root["import"]["ua"][json_key] | 0.0;
-                                  id(gas_import_ro) =
-                                      root["import"]["ro"][json_key] | 0.0;
-                                  id(gas_import_hr) =
-                                      root["import"]["hr"][json_key] | 0.0;
-                                  id(gas_import_rs) =
-                                      root["import"]["rs"][json_key] | 0.0;
-                                  id(gas_import_rs2) =
-                                      root["import"]["rs2"][json_key] | 0.0;
-                                  id(gas_import_at) =
-                                      root["import"]["at"][json_key] | 0.0;
-                                  id(gas_import_sk) =
-                                      root["import"]["sk"][json_key] | 0.0;
-
-                                  // production
-                                  id(gas_production_total) =
-                                      root["production"]["total"][json_key] | 0.0;
-                                }
-
-                                return true;
-                              });
-                        else:
-                          - logger.log:
-                              format: "Error: Response status: %d, message %s"
-                              args: [ 'response->status_code', 'body.c_str()' ]
   - id: display_statusbar
     then:
       - lambda: |-
@@ -686,11 +706,17 @@ script:
           }
 
           if (state & STATUS_LED_ERROR) {
-            id(lcd_disp).print(74, 57, id(icons), red, "\U0000e000");
+            id(lcd_disp).print(74, 55, id(icons), red, "\U0000e000");
+          }
+
+          // Energy price only for the power data
+          auto opt = id(displayed_data).active_index();
+          if (opt.has_value() && opt.value() == 0) {
+            id(lcd_disp).printf(100, 55, id(segment_20), white, "%4.0f €/MW", id(power_price));
           }
 
           if (id(api_time).now().is_valid()) {
-            id(lcd_disp).strftime(230, 53, id(segment_20), white, "%H:%M", id(api_time).now());
+            id(lcd_disp).strftime(id(lcd_disp).get_width() - 2, 55, id(segment_20), white, display::TextAlign::TOP_RIGHT, "%H:%M", id(api_time).now());
           }
 
 interval:
@@ -715,7 +741,7 @@ interval:
                 condition:
                   - display.is_displaying_page: power_other
                 then:
-                  - display.page.show: power_nuclear
+                  - display.page.show: power_price_disp
                 else:
                   - display.page.show_next: lcd_disp
       - if:
@@ -840,14 +866,16 @@ binary_sensor:
     entity_category: diagnostic
 
 font:
-  - file: "resources/alarmclock.ttf"
+  - file: ${resources}/alarmclock.ttf
     id: segment
     size: 55
-    bpp: 8
-  - file: "resources/alarmclock.ttf"
+    bpp: 4
+    glyphs: [" -.0123456789:/IMNSTUWhm°€"]
+  - file: ${resources}/alarmclock.ttf
     id: segment_20
     size: 20
     bpp: 8
+    glyphs: [" -.0123456789:/MW€"]
   - file:
       type: gfonts
       family: PT Sans
@@ -857,7 +885,7 @@ font:
   - file: "gfonts://Material+Symbols+Outlined"
     id: icons
     size: 16
-    bpp: 8
+    bpp: 4
     glyphs: [
       "\U0000e63e", # mdi-wifi
       "\U0000e648", # mdi-wifi-off
@@ -882,30 +910,36 @@ font:
       "\U0000e872", # delete-trash
       "\U0000e619", # more
     ]
-  - file: "resources/Font Awesome 7 Free-Solid-900.otf"
+  - file: ${resources}/fa-solid-900.otf
     id: icons_big3
     size: 38
+    bpp: 4
     glyphs: [
       "\U0000f7b9", # radiation
     ]
 
 image:
   - platform: file
-    file: https://raw.githubusercontent.com/denes44/HUEnergyDisplay/refs/heads/main/esphome/resources/logo.png
+    file: ${resources}/logo.png
     type: binary
     id: logo_image
   - platform: file
-    file: https://raw.githubusercontent.com/denes44/HUEnergyDisplay/refs/heads/main/esphome/resources/coal.png
+    file: ${resources}/coal.png
     type: RGB
     id: logo_coal
     transparency: alpha_channel
   - platform: file
-    file: https://raw.githubusercontent.com/denes44/HUEnergyDisplay/refs/heads/main/esphome/resources/gas.png
+    file: ${resources}/gas.png
     type: RGB
     id: logo_gas
     transparency: alpha_channel
   - platform: file
-    file: https://raw.githubusercontent.com/denes44/HUEnergyDisplay/refs/heads/main/esphome/resources/oil.png
+    file: ${resources}/oil.png
     type: RGB
     id: logo_oil
+    transparency: alpha_channel
+  - platform: file
+    file: ${resources}/money.png
+    type: RGB
+    id: logo_money
     transparency: alpha_channel

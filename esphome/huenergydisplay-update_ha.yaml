@@ -8,12 +8,6 @@ ota:
   - platform: esphome
     id: esphome_ota_component
 
-esphome:
-  on_boot:
-    priority: -100
-    then:
-      - script.execute: check_update
-
 wifi:
   on_connect:
     then:
