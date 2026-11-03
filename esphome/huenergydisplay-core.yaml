@@ -5,20 +5,19 @@
 ##############################################
 
 substitutions:
-  components_source: github://denes44/HUEnergyDisplay@main
-  # Where the fonts and images are loaded from: an URL or a local folder.
-  # The factory configuration uses the local folder, like the components.
-  resources: https://raw.githubusercontent.com/denes44/HUEnergyDisplay/refs/heads/main/esphome/resources
+  project_version: 1.4.0
+  components_source: github://denes44/HUEnergyDisplay@esphome-${project_version}
+  resources: https://raw.githubusercontent.com/denes44/HUEnergyDisplay/refs/tags/esphome-${project_version}/esphome/resources
 
 # ESPHome & Board
 
 esphome:
   name: ${name}
   friendly_name: ${friendly_name}
-  min_version: 2025.11.0
+  min_version: 2026.9.0
   project:
     name: "denes44.HUEnergyDisplay"
-    version: 1.4.0
+    version: ${project_version}
   platformio_options:
     board_build.flash_mode: dio
   on_boot:
@@ -52,7 +51,6 @@ http_request:
   buffer_size_rx: 2048
   buffer_size_tx: 2048
 
-# Energy API requests run in a background task, so they don't block the main loop
 async_http:
   id: api_http
   timeout: 5s
@@ -110,6 +108,9 @@ async_http:
                     id(power_import_si) = imports["si"] | 0.0f;
                     id(power_import_sk) = imports["sk"] | 0.0f;
                     id(power_import_ua) = imports["ua"] | 0.0f;
+
+                    // price
+                    id(power_price) = root["price"]["day_ahead"];
 
                   // GAS DATA
                   } else if(opt.has_value() && opt.value() == 1) {
@@ -221,6 +222,10 @@ globals:
   - id: power_import_sk
     type: float
   - id: power_import_ua
+    type: float
+
+  # Power - Price
+  - id: power_price
     type: float
 
   # Gas - Consumption
@@ -407,7 +412,8 @@ display:
       swap_xy: true
       mirror_x: true
       mirror_y: false
-    buffer_size: 50%
+    data_rate: 40MHz
+    buffer_size: 100%
     invert_colors: False
     pages:
       - id: logo1
@@ -427,64 +433,70 @@ display:
             it.printf(2, 0, id(segment), red, "UNITS: MW");
           }
           id(display_statusbar).execute();
+      - id: power_price_disp
+        lambda: |-
+          auto green = Color(0, 255, 0);
+          it.image(3, 5, id(logo_money));
+          it.printf(it.get_width() - 1, 0, id(segment), green, display::TextAlign::TOP_RIGHT, "%4.0f €", id(power_price));
+          id(display_statusbar).execute();
       - id: power_nuclear
         lambda: |-
           auto red = Color(255, 0, 0);
           auto yellow = Color(255, 255, 0);
           it.print(4, 7, id(icons_big3), yellow, "\U0000f7b9");
-          it.printf(53, 0, id(segment), red, "%4.0f MW", id(power_production_nuclear));
+          it.printf(it.get_width() - 1, 0, id(segment), red, display::TextAlign::TOP_RIGHT, "%4.0f MW", id(power_production_nuclear));
           id(display_statusbar).execute();
       - id: power_gas
         lambda: |-
           auto red = Color(255, 0, 0);
           it.image(6, 11, id(logo_gas));
-          it.printf(53, 0, id(segment), red, "%4.0f MW", id(power_production_gas));
+          it.printf(it.get_width() - 1, 0, id(segment), red, display::TextAlign::TOP_RIGHT, "%4.0f MW", id(power_production_gas));
           id(display_statusbar).execute();
       - id: power_biomass
         lambda: |-
           auto red = Color(255, 0, 0);
           auto green = Color(0, 255, 0);
           it.print(3, 3, id(icons_big), green, "\U0000e761");
-          it.printf(53, 0, id(segment), red, "%4.0f MW", id(power_production_biomass));
+          it.printf(it.get_width() - 1, 0, id(segment), red, display::TextAlign::TOP_RIGHT, "%4.0f MW", id(power_production_biomass));
           id(display_statusbar).execute();
       - id: power_coal
         lambda: |-
           auto red = Color(255, 0, 0);
           it.image(3, 5, id(logo_coal));
-          it.printf(53, 0, id(segment), red, "%4.0f MW", id(power_production_coal_brown)+id(power_production_coal_hard));
+          it.printf(it.get_width() - 1, 0, id(segment), red, display::TextAlign::TOP_RIGHT, "%4.0f MW", id(power_production_coal_brown)+id(power_production_coal_hard));
           id(display_statusbar).execute();
       - id: power_waste
         lambda: |-
           auto red = Color(255, 0, 0);
           auto brown = Color(180, 90, 0);
           it.print(3, 1, id(icons_big), brown, "\U0000e872");
-          it.printf(53, 0, id(segment), red, "%4.0f MW", id(power_production_waste));
+          it.printf(it.get_width() - 1, 0, id(segment), red, display::TextAlign::TOP_RIGHT, "%4.0f MW", id(power_production_waste));
           id(display_statusbar).execute();
       - id: power_oil
         lambda: |-
           auto red = Color(255, 0, 0);
           it.image(6, 10, id(logo_oil));
-          it.printf(53, 0, id(segment), red, "%4.0f MW", id(power_production_oil));
+          it.printf(it.get_width() - 1, 0, id(segment), red, display::TextAlign::TOP_RIGHT, "%4.0f MW", id(power_production_oil));
           id(display_statusbar).execute();
       - id: power_hydro
         lambda: |-
           auto red = Color(255, 0, 0);
           auto blue = Color(0, 0, 255);
           it.print(3, 1, id(icons_big), blue, "\U0000f084");
-          it.printf(53, 0, id(segment), red, "%4.0f MW", id(power_production_hydro_ror)+id(power_production_hydro_reservoir));
+          it.printf(it.get_width() - 1, 0, id(segment), red, display::TextAlign::TOP_RIGHT, "%4.0f MW", id(power_production_hydro_ror)+id(power_production_hydro_reservoir));
           id(display_statusbar).execute();
       - id: power_wind
         lambda: |-
           auto red = Color(255, 0, 0);
           auto grey = Color(192, 192, 192);
           it.print(3, 2, id(icons_big), grey, "\U0000ec0c");
-          it.printf(53, 0, id(segment), red, "%4.0f MW", id(power_production_wind));
+          it.printf(it.get_width() - 1, 0, id(segment), red, display::TextAlign::TOP_RIGHT, "%4.0f MW", id(power_production_wind));
           id(display_statusbar).execute();
       - id: power_other
         lambda: |-
           auto red = Color(255, 0, 0);
           it.print(3, 1, id(icons_big), red, "\U0000e619");
-          it.printf(53, 0, id(segment), red, "%4.0f MW", id(power_production_other)+id(power_production_other_renewable));
+          it.printf(it.get_width() - 1, 0, id(segment), red, display::TextAlign::TOP_RIGHT, "%4.0f MW", id(power_production_other)+id(power_production_other_renewable));
           id(display_statusbar).execute();
   - platform: max7219
     id: segment_disp
@@ -694,11 +706,17 @@ script:
           }
 
           if (state & STATUS_LED_ERROR) {
-            id(lcd_disp).print(74, 57, id(icons), red, "\U0000e000");
+            id(lcd_disp).print(74, 55, id(icons), red, "\U0000e000");
+          }
+
+          // Energy price only for the power data
+          auto opt = id(displayed_data).active_index();
+          if (opt.has_value() && opt.value() == 0) {
+            id(lcd_disp).printf(100, 55, id(segment_20), white, "%4.0f €/MW", id(power_price));
           }
 
           if (id(api_time).now().is_valid()) {
-            id(lcd_disp).strftime(230, 53, id(segment_20), white, "%H:%M", id(api_time).now());
+            id(lcd_disp).strftime(id(lcd_disp).get_width() - 2, 55, id(segment_20), white, display::TextAlign::TOP_RIGHT, "%H:%M", id(api_time).now());
           }
 
 interval:
@@ -723,7 +741,7 @@ interval:
                 condition:
                   - display.is_displaying_page: power_other
                 then:
-                  - display.page.show: power_nuclear
+                  - display.page.show: power_price_disp
                 else:
                   - display.page.show_next: lcd_disp
       - if:
@@ -852,13 +870,11 @@ font:
     id: segment
     size: 55
     bpp: 4
-    # Only the characters of the values, "UNITS: MW", the gas units and the energy price
     glyphs: [" -.0123456789:/IMNSTUWhm°€"]
   - file: ${resources}/alarmclock.ttf
     id: segment_20
     size: 20
     bpp: 8
-    # Only the characters of the clock and the energy price
     glyphs: [" -.0123456789:/MW€"]
   - file:
       type: gfonts
@@ -869,7 +885,7 @@ font:
   - file: "gfonts://Material+Symbols+Outlined"
     id: icons
     size: 16
-    bpp: 8
+    bpp: 4
     glyphs: [
       "\U0000e63e", # mdi-wifi
       "\U0000e648", # mdi-wifi-off
@@ -897,6 +913,7 @@ font:
   - file: ${resources}/fa-solid-900.otf
     id: icons_big3
     size: 38
+    bpp: 4
     glyphs: [
       "\U0000f7b9", # radiation
     ]
@@ -920,4 +937,9 @@ image:
     file: ${resources}/oil.png
     type: RGB
     id: logo_oil
+    transparency: alpha_channel
+  - platform: file
+    file: ${resources}/money.png
+    type: RGB
+    id: logo_money
     transparency: alpha_channel

@@ -5,11 +5,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.4.0] - Unreleased
 
+### Added
+
+- Added current energy price to the TFT display
+  - It displays as a separate page with the production data and it's always
+    on the status bar as well
+
 ### Changed
 
 - Import/export bar now always displays at least one bar to indicate direction
 - The TFT display fonts only include the characters that are actually used,
   making the firmware smaller
+- Changed the SPI frequency of the TFT display, so display communication blocks
+  the main loop less
 
 ### Fixed
 
@@ -22,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The Home Assistant update check no longer runs twice on every boot
 - Fixed the dashboard imported configuration failing to compile, because the
   font files couldn't be found
+- Fixed the positioning of some items on the TFT display
 
 ## [1.3.1] - 2026-08-09
 
